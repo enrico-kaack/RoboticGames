@@ -86,24 +86,35 @@ class CollisionAvoidance:
         Die 1. Komponente entspricht dabei der Aenderung der Lineargeschwindigkeit
         und die 2. enstprechend der Aenderung der Winkelgeschwindigkeit.
         '''
-        
-        threshold = 0.5
-        
-        #threshold on force = distance
-        distancesWithThrehold = (1/sonar_ranges * -1) + threshold
+        if np.min([sonar_ranges[2], sonar_ranges[3], sonar_ranges[4], sonar_ranges[5]]) < 0.2:
+            threshold = 0.2
+            
+            #threshold on force = distance
+            distancesWithThrehold = (1/sonar_ranges * -1) - threshold
 
-        b = np.sin(sonar_angles) * distancesWithThrehold
-        a = np.cos(sonar_angles) * distancesWithThrehold
+            weight = np.array([0.2, 0.3, 0.4, 0.8, 0.8, 0.4, 0.3, 0.2])
 
-        F_x = np.sum(b)
-        F_y = np.sum(a)
+            b = np.sin(sonar_angles) * distancesWithThrehold * weight
+            a = np.cos(sonar_angles) * distancesWithThrehold * weight
 
-        rotationAngle = np.arctan(F_y / F_x)
+            F_x = np.sum(b)
+            F_y = np.sum(a)
 
-        rospy.loginfo(rotationAngle)
+            rotationAngle = np.arctan(F_y / F_x)
 
-        
-        force=np.array([0.6, rotationAngle])
+
+            #linearForce = 1/((sonar_ranges[3] + sonar_ranges[4]) / 2) 
+            
+            #if linearForce < 0.1:
+            #    linearForce = 0.1
+            linearForce = 1
+            rospy.loginfo([linearForce, rotationAngle])
+        else:
+            linearForce = 0
+            rotationAngle = 0
+
+
+        force=np.array([linearForce, rotationAngle])
         return force
 
 
