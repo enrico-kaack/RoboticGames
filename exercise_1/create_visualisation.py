@@ -18,7 +18,7 @@ for i in range(1,6):
     plt.scatter(-point_list[1:,1],point_list[1:,0])
     #plt.show()
     plt.savefig("/home/enrico/catkin_ws/src/exercise_1/"+str(i)+".jpg")
-
+    plt.clf()
 
 
 
