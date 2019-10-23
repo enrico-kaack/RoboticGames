@@ -25,13 +25,19 @@ class SimpleHoming:
         https://www.w3schools.com/python/python_classes.asp
         '''
 
-        pub            = rospy.Publisher("/p3dx/p3dx_velocity_controller/cmd_vel", Twist, queue_size=10)
+        rospy.Subscriber("dead_reckoning", Pose, self.dead_reckoningCallback)
+
+        pub = rospy.Publisher("/p3dx/p3dx_velocity_controller/cmd_vel", Twist, queue_size=10)
         while not rospy.is_shutdown():   
             output=Twist()
             output = closed_loop(self.position,self.orientation,final_position)
             pub.publish(output)
+            rospy.loginfo(self.position)
 
-
+    def dead_reckoningCallback(self, data):
+        self.position = np.array([data.position.x, data.position.y, data.position.z])
+        self.orientation = data.orientation.z
+        rospy.loginfo(self.position)
 
 
 def closed_loop(position,orientation,target):
