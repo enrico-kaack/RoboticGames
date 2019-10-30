@@ -32,10 +32,9 @@ class SimpleHoming:
             output=Twist()
             output = closed_loop(self.position,self.orientation,final_position)
             pub.publish(output)
-            rospy.loginfo(self.position)
 
     def dead_reckoningCallback(self, data):
-        self.position = np.array([data.position.x, data.position.y, data.position.z])
+        self.position = np.array([data.position.x, data.position.y])
         self.orientation = data.orientation.z
         rospy.loginfo(self.position)
 
@@ -50,7 +49,20 @@ def closed_loop(position,orientation,target):
         For a reference on how to write a Twist message one can consult 
         exercise_1.py
         '''
+        
+        ####calc rotation
+        #make target relativ to robot in cartesian
+        targetRelative = target - position
+        #convert to polar
+        rotation = np.arctan2(targetRelative[1], targetRelative[0])
 
+        ####calc speed
+        #calc distance
+        distance = np.sqrt(targetRelative[0] ** 2 + targetRelative[1] ** 2)
+        if distance > 0.1:
+            output.linear.x = 0.1
+        output.angular.z = rotation*0.2
+        print(output)
         return output
 
 if  __name__=="__main__":
