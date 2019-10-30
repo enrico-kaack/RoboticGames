@@ -49,6 +49,9 @@ def closed_loop(position,orientation,target):
         For a reference on how to write a Twist message one can consult 
         exercise_1.py
         '''
+
+        if np.linalg.norm(position - target) < 0.1:
+            return output 
         
         ####calc rotation
         #make target relativ to robot in cartesian
@@ -59,9 +62,9 @@ def closed_loop(position,orientation,target):
         ####calc speed
         #calc distance
         distance = np.sqrt(targetRelative[0] ** 2 + targetRelative[1] ** 2)
-        if distance > 0.1:
-            output.linear.x = 0.1
-        output.angular.z = rotation*0.2
+
+        output.linear.x = 0.2
+        output.angular.z = rotation - (np.pi - orientation) 
         print(output)
         return output
 
