@@ -20,7 +20,9 @@ class CollisionAvoidance:
 
         self.current_vel_x = 0.0
         self.current_ang_z = 0.0
-        self.previousDistance = np.zeros(8)
+
+        self.last_angle = 0.0
+
 
         '''
         Die verwendung eines Kraftbasierten Ansatzes bedeutet, dass die momentane Geschwindigkeit
@@ -86,35 +88,34 @@ class CollisionAvoidance:
         Die 1. Komponente entspricht dabei der Aenderung der Lineargeschwindigkeit
         und die 2. enstprechend der Aenderung der Winkelgeschwindigkeit.
         '''
-        if np.min([sonar_ranges[2], sonar_ranges[3], sonar_ranges[4], sonar_ranges[5]]) < 0.2:
-            threshold = 0.2
-            
-            #threshold on force = distance
-            distancesWithThrehold = (1/sonar_ranges * -1) - threshold
 
-            weight = np.array([0.2, 0.3, 0.4, 0.8, 0.8, 0.4, 0.3, 0.2])
+        sum = np.zeros(2)
 
-            b = np.sin(sonar_angles) * distancesWithThrehold * weight
-            a = np.cos(sonar_angles) * distancesWithThrehold * weight
+        for i, sonar_range in enumerate(sonar_ranges):
+            if sonar_range == 0.0:
+                rospy.logerr('Catched Zero')
+                sonar_range = 1e-12
+            vec = np.array([1/sonar_range * np.cos(sonar_angles[i]), 1/sonar_range * np.sin(sonar_angles[i])])
+            sum += vec
 
-            F_x = np.sum(b)
-            F_y = np.sum(a)
+        sum *= (-1)
 
-            rotationAngle = np.arctan(F_y / F_x)
+        sum_dist = np.linalg.norm(sum)
 
+        if sum_dist < 10.0:
+            return np.zeros(2)
 
-            #linearForce = 1/((sonar_ranges[3] + sonar_ranges[4]) / 2) 
-            
-            #if linearForce < 0.1:
-            #    linearForce = 0.1
-            linearForce = 1
-            rospy.loginfo([linearForce, rotationAngle])
-        else:
-            linearForce = 0
-            rotationAngle = 0
+        phi = -np.arctan2(sum[1], sum[0])
 
+        force = np.zeros(2)
+        force[0] = np.clip(-sum[0] / 20, 0, 1)
+        force[1] = np.clip(phi, -np.pi/2, np.pi/2)
 
-        force=np.array([linearForce, rotationAngle])
+        if -force[1] == self.last_angle:
+            force[1] = self.last_angle
+
+        self.last_angle = force[1]
+
         return force
 
 
