@@ -1,0 +1,4 @@
+<launch>
+	<node name="laser_to_sonar" type="laser_to_sonar.py" pkg="robotic_games_tutorium"/>
+	<include file="$(find p3dx_gazebo)/launch/gazebo.launch"/>
+</launch>
