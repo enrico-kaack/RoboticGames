@@ -1,0 +1,127 @@
+\documentclass[12pt, a4paper]{report}
+\usepackage[]{geometry, scrlayer-scrpage, sectsty, amsmath, amssymb, scrlayer-scrpage, graphicx, listings, xcolor}
+\sectionfont{\huge}
+\usepackage[onehalfspacing]{setspace}
+\geometry{headheight=7.5cm, headsep=1cm}
+\geometry{footskip=4.0cm}
+\pagestyle{scrheadings}
+\ihead{Robotic Games \\27.11.2019}
+\ohead{Enrico Kaack, Robin Fleige, Laura Nell}
+\cfoot{\pagemark}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt}
+    
+\lstset{style=mystyle, language=Python}
+
+
+\begin{document}
+\pagenumbering{arabic}
+\onehalfspacing
+\section*{Zwischenbericht}
+
+\subsection*{Implementierung}
+
+\begin{itemize}
+\item \underline{Collision avoidance}\\
+\begin{lstlisting}
+def calculate_force(self, sonar_angles, sonar_ranges):
+  sum = np.zeros(2)
+
+  for i, sonar_range in enumerate(sonar_ranges):
+      if sonar_range == 0.0:
+          rospy.logerr('Catched Zero')
+          sonar_range = 1e-12
+      vec = np.array([1/sonar_range * np.cos(sonar_angles[i]), 1/sonar_range * np.sin(sonar_angles[i])])
+      sum += vec
+          
+  sum *= (-1)
+  sum_dist = np.linalg.norm(sum)
+       
+  if sum_dist < 10.0:
+      return np.zeros(2)
+
+  phi = -np.arctan2(sum[1], sum[0])
+  force = np.zeros(2)
+  force[0] = np.clip(-sum[0] / 20, 0, 1)
+  force[1] = np.clip(phi, -np.pi/2, np.pi/2)
+
+  if -force[1] == self.last_angle:
+      force[1] = self.last_angle
+
+  self.last_angle = force[1]
+  return force
+  
+\end{lstlisting}
+
+\item \underline{Homing}\\
+\begin{lstlisting}
+rospy.Subscriber("dead_reckoning", Pose, self.callback)
+\end{lstlisting}
+
+\begin{lstlisting}
+def callback(self, pos):
+  self.orientation[0] = pos.orientation.z
+  self.position[0] = pos.position.x
+  self.position[1] = pos.position.y
+\end{lstlisting}
+
+\begin{lstlisting}
+def closed_loop(position,orientation,target):
+  output=Twist()
+
+  target_rel_x = target[0] - position[0]
+  target_rel_y = target[1] - position[1]
+
+  dir_x = np.cos(orientation[0]-np.pi/2)*target_rel_x + np.sin(orientation[0]-np.pi/2)*target_rel_y
+  dir_y = np.cos(orientation[0]-np.pi/2)*target_rel_y - np.sin(orientation[0]-np.pi/2)*target_rel_x
+
+  if np.abs(np.arctan2(dir_x, dir_y)) < np.pi/4 and dir_x*dir_x+dir_y*dir_y > 0.01:
+      output.linear.x = 0.5
+  else:
+      output.linear.x = 0
+  if np.abs(np.arctan2(dir_x,dir_y)) > np.pi/30:
+      output.angular.z = np.arctan2(dir_x, dir_y)/3
+
+  return output
+  
+\end{lstlisting}
+
+\item \underline{Free space}\\
+
+
+\end{itemize}
+
+
+\subsection*{Verhaltensfusion}
+
+\subsection*{}
+
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
