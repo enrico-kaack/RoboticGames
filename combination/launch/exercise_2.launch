@@ -1,0 +1,7 @@
+<launch>
+	<!-- for the exercise the args argument in the first node needs to be varied -->
+	<node name="dead_reckoning"      type="dead_reckoning_sim.py" pkg="exercise_2" args="0.0"/>
+	<node name="homing" type="combine.py"     pkg="exercise_2"/>
+	<node name="record" pkg="rosbag" type="record" args="-O homing_path /p3dx/p3dx/base_pose_ground_truth"/>
+	<include file="$(find exercise_2)/gazebo.launch"/>
+</launch>
