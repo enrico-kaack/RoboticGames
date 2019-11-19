@@ -2,7 +2,7 @@
 import numpy as np
 import rospy
 import math
-import exercise_1
+from exercise_1 import CollisionAvoidance
 import analog_gates
 
 from geometry_msgs.msg import Pose
@@ -32,11 +32,9 @@ class SimpleHoming:
 
         pub            = rospy.Publisher("/p3dx/p3dx_velocity_controller/cmd_vel", Twist, queue_size=10)
         while not rospy.is_shutdown():   
-            #output=Twist()
-
+            output=Twist()
             output = closed_loop(self.position,self.orientation,final_position)
-            combination = combine(output, CollisionAvoidance())
-            pub.publish(combination)
+            pub.publish(output)
 
     def callback(self, pos):
         self.orientation[0] = pos.orientation.z

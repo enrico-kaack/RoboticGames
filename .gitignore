@@ -1,2 +1,2 @@
-CMakeLists.txt
-p3dx/
+*.pyc
+p3dx
