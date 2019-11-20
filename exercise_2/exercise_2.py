@@ -30,7 +30,7 @@ class SimpleHoming:
 
         rospy.Subscriber("dead_reckoning", Pose, self.callback)
 
-        pub            = rospy.Publisher("/p3dx/p3dx_velocity_controller/cmd_vel", Twist, queue_size=10)
+        pub = rospy.Publisher("/p3dx/p3dx_velocity_controller/cmd_vel", Twist, queue_size=10)
         while not rospy.is_shutdown():   
             output=Twist()
             output = closed_loop(self.position,self.orientation,final_position)

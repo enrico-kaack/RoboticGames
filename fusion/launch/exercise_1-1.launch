@@ -1,0 +1,7 @@
+<launch>
+	<node name="laser_to_sonar"      type="laser_to_sonar.py" pkg="fusion"/>
+	<!-- <node name="free_space" type="fusion.py"     pkg="fusion"/> -->
+	<node name="dead_reckoning" type="dead_reckoning_sim.py" pkg="fusion" args="0.0"/>
+	<node name="record" pkg="rosbag" type="record" args="-O robot_path1 /p3dx/p3dx/base_pose_ground_truth"/>
+	<include file="$(find fusion)/launch/gazebo1.launch"/>
+</launch>

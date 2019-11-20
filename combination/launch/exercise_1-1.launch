@@ -1,6 +1,0 @@
-<launch>
-	<node name="laser_to_sonar"      type="laser_to_sonar.py" pkg="exercise_3"/>
-	<node name="free_space" type="combine.py"     pkg="exercise_3"/>
-	<node name="record" pkg="rosbag" type="record" args="-O robot_path1 /p3dx/p3dx/base_pose_ground_truth"/>
-	<include file="$(find exercise_1)/launch/gazebo1.launch"/>
-</launch>
