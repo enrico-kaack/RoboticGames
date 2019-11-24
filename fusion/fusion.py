@@ -7,6 +7,7 @@ from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Pose
 from geometry_msgs.msg import Twist
 import analog_gates
+from tf.transformations import euler_from_quaternion
 
 
 class Fusion:
@@ -27,14 +28,12 @@ class Fusion:
         self.final_position = np.array([-2,-3])
 
 
-        rospy.Subscriber("/p3dx/p3dx_velocity_controller/odom", Odometry, self.velocity_callback)
-        rospy.Subscriber("/robotic_games/sonar", PointCloud, self.sonar_callback)
+        rospy.Subscriber("/cat/p3dx_velocity_controller/odom", Odometry, self.velocity_callback)
+        rospy.Subscriber("/cat/sonar", PointCloud, self.sonar_callback)
 
-        rospy.Subscriber("dead_reckoning", Pose, self.position_callback)
-
-
-        self.col_avoid_publisher = rospy.Publisher("/p3dx/p3dx_velocity_controller/cmd_vel", Twist, queue_size=10)
-        pub = rospy.Publisher("/p3dx/p3dx_velocity_controller/cmd_vel", Twist, queue_size=10)
+        rospy.Subscriber("/cat/base_pose_ground_truth", Odometry, self.position_callback)
+        rospy.Subscriber("/mouse/base_pose_ground_truth", Odometry, self.target_position_callback)
+        pub = rospy.Publisher("/cat/p3dx_velocity_controller/cmd_vel", Twist, queue_size=10)
         
 
         while not rospy.is_shutdown():   
@@ -44,9 +43,13 @@ class Fusion:
             freeSpace = self.calculate_freespace()
 
             output = self.fusion(collAvoidance, homing, freeSpace)
-            rospy.loginfo(output)
+            #rospy.loginfo(output)
 
             pub.publish(output)
+
+    def target_position_callback(self, target_pos):
+        self.final_position[0] = target_pos.pose.pose.position.x
+        self.final_position[1] = target_pos.pose.pose.position.y
 
 
 
@@ -64,19 +67,26 @@ class Fusion:
             self.sonar_ranges[i] = np.sqrt(sonar_points[i].x**2 + sonar_points[i].y**2)
 
     def position_callback(self, pos):
-        self.orientation[0] = pos.orientation.z
-        self.position[0] = pos.position.x
-        self.position[1] = pos.position.y
+        fake_odom=pos.pose.pose
+        euler=euler_from_quaternion([fake_odom.orientation.x,fake_odom.orientation.y,fake_odom.orientation.z,fake_odom.orientation.w])
+        orientation =euler[2]
+
+        self.orientation[0] = orientation
+        self.position[0] = pos.pose.pose.position.x
+        self.position[1] = pos.pose.pose.position.y
 
     def fusion(self, collAvoidance, homing, freeSpace):
         output = Twist()
+
         output.linear.x = analog_gates.and_gate(homing.linear.x, freeSpace.linear.x)
         output.angular.z = analog_gates.and_gate(homing.angular.z, freeSpace.angular.z)
         
-        rospy.loginfo(collAvoidance)
-        output.linear.x = analog_gates.invoke_gate(output.linear.x, 1-collAvoidance.linear.x)
+        #rospy.loginfo(output)
+        output.linear.x = analog_gates.invoke_gate(output.linear.x, collAvoidance.linear.x)
         output.angular.z = analog_gates.invoke_gate(output.angular.z, collAvoidance.angular.z)
-        rospy.loginfo("DONE FUSION")
+        #rospy.loginfo(output)
+
+        #rospy.loginfo("DONE FUSION")
         return output
     
     def calculate_collision_avoidance(self):
@@ -150,7 +160,7 @@ class Fusion:
         if np.abs(np.arctan2(dir_x, dir_y)) < np.pi/4 and dir_x*dir_x+dir_y*dir_y > 0.01:
             output.linear.x = 0.5
         else:
-            output.linear.x = 0
+            output.linear.x = 0.2
         if np.abs(np.arctan2(dir_x,dir_y)) > np.pi/30:
             output.angular.z = np.arctan2(dir_x, dir_y)/3
 
