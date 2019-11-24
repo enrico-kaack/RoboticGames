@@ -32,8 +32,8 @@ class Fusion:
         rospy.Subscriber("/cat/sonar", PointCloud, self.sonar_callback)
 
         rospy.Subscriber("/cat/base_pose_ground_truth", Odometry, self.position_callback)
-        rospy.Subscriber("/mouse/base_pose_ground_truth", Odometry, self.target_position_callback)
         pub = rospy.Publisher("/cat/p3dx_velocity_controller/cmd_vel", Twist, queue_size=10)
+        rospy.Subscriber("/mouse/base_pose_ground_truth", Odometry, self.target_position_callback)
         
 
         while not rospy.is_shutdown():   
@@ -50,8 +50,6 @@ class Fusion:
     def target_position_callback(self, target_pos):
         self.final_position[0] = target_pos.pose.pose.position.x
         self.final_position[1] = target_pos.pose.pose.position.y
-
-
 
     def velocity_callback(self, current_odometry):
         self.current_vel_x = current_odometry.twist.twist.linear.x
@@ -80,17 +78,17 @@ class Fusion:
 
         output.linear.x = analog_gates.and_gate(homing.linear.x, freeSpace.linear.x)
         output.angular.z = analog_gates.and_gate(homing.angular.z, freeSpace.angular.z)
-        
-        #rospy.loginfo(output)
-        output.linear.x = analog_gates.invoke_gate(output.linear.x, collAvoidance.linear.x)
-        output.angular.z = analog_gates.invoke_gate(output.angular.z, collAvoidance.angular.z)
-        #rospy.loginfo(output)
+        temp = output
+        #rospy.loginfo(collAvoidance)
+        output.linear.x = analog_gates.prevail_gate(1-collAvoidance.linear.x, output.linear.x)
+        output.angular.z = analog_gates.prevail_gate(collAvoidance.angular.z, output.angular.z)
+        print("\t|".join(["\t".join([str(output.linear.x), str(output.angular.z)]), "\t".join([str(temp.linear.x), str(temp.angular.z)]), "\t".join([str(collAvoidance.linear.x), str(collAvoidance.angular.z)]), "\t".join([str(homing.linear.x), str(homing.angular.z)]), "\t".join([str(freeSpace.linear.x), str(freeSpace.angular.z)])]))
 
         #rospy.loginfo("DONE FUSION")
         return output
     
     def calculate_collision_avoidance(self):
-
+        """
         sum = np.zeros(2)
 
         for i, self.sonar_range in enumerate(self.sonar_ranges):
@@ -121,8 +119,45 @@ class Fusion:
         self.last_angle = force[1]
 
         velocity_adjustment = Twist()
-        velocity_adjustment.linear.x  = force[0]
+        velocity_adjustment.linear.x  = 1-force[0]
         velocity_adjustment.angular.z = force[1]
+
+        """
+
+        for i, self.sonar_range in enumerate(self.sonar_ranges):
+            if self.sonar_range == 0.0:
+                rospy.logerr('Catched Zero')
+                self.sonar_ranges[i] = 1e-12
+
+        threshold = 0.4
+        if np.min([self.sonar_ranges[2], self.sonar_ranges[3], self.sonar_ranges[4], self.sonar_ranges[5]]) < 0.4:
+            
+            #threshold on force = distance
+            distancesWithThrehold = (1/self.sonar_ranges * -1) - threshold
+
+            weight = np.array([0.2, 0.3, 0.4, 0.8, 0.8, 0.4, 0.3, 0.2])
+
+            b = np.sin(self.sonar_angles) * distancesWithThrehold * weight
+            a = np.cos(self.sonar_angles) * distancesWithThrehold * weight
+
+            F_x = np.sum(b)
+            F_y = np.sum(a)
+
+            rotationAngle = np.arctan(F_y / F_x)
+
+
+            #linearForce = 1/((self.sonar_ranges[3] + self.sonar_ranges[4]) / 2) 
+            
+            #if linearForce < 0.1:
+            #    linearForce = 0.1
+            linearForce = 1
+        else:
+            linearForce = 0
+            rotationAngle = 0
+
+        velocity_adjustment = Twist()
+        velocity_adjustment.linear.x  = 1-linearForce
+        velocity_adjustment.angular.z = rotationAngle
 
         return velocity_adjustment
 
@@ -135,9 +170,9 @@ class Fusion:
         id_biggest_range = indices_biggest_ranges if not isinstance(indices_biggest_ranges, list) else indices_biggest_ranges[0]
         
         if id_biggest_range > 3:
-            adjustment.angular.z = -2
+            adjustment.angular.z = -1
         else:
-            adjustment.angular.z = 2
+            adjustment.angular.z = 1
         
         adjustment.linear.x  = 0.5
         return adjustment
@@ -162,7 +197,7 @@ class Fusion:
         else:
             output.linear.x = 0.2
         if np.abs(np.arctan2(dir_x,dir_y)) > np.pi/30:
-            output.angular.z = np.arctan2(dir_x, dir_y)/3
+            output.angular.z = np.arctan2(dir_x, dir_y)
 
         return output
 
