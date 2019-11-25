@@ -5,7 +5,7 @@
 \geometry{headheight=7.5cm, headsep=1cm}
 \geometry{footskip=4.0cm}
 \pagestyle{scrheadings}
-\ihead{Robotic Games \\27.11.2019}
+\ihead{Robotic Games \\\today}
 \ohead{Enrico Kaack, Robin Fleige, Laura Nell}
 \cfoot{\pagemark}
 
@@ -30,15 +30,34 @@
 \lstset{style=mystyle, language=Python}
 
 
+
 \begin{document}
+
+\begin{titlepage}
+
+        \centering
+        \vspace{1cm}
+        {\scshape\Large Robotic Games WS19/20 \par}
+        \vspace{1.5cm}
+        {\huge\bfseries Zwischenbericht \par}
+        \vspace{2cm}
+        {\Large\itshape Enrico Kaack, Robin Fleige, Laura Nell \par}
+
+    
+        \vfill
+    
+    % Bottom of the page
+        {\large \today\par}
+    \end{titlepage}
+\newpage    
+
 \pagenumbering{arabic}
 \onehalfspacing
-\section*{Zwischenbericht}
 
-\subsection*{Implementierung}
 
-\begin{itemize}
-\item \underline{Collision avoidance}\\
+\chapter{Implementierung}
+
+\section{Collision avoidance}
 \begin{lstlisting}
 def calculate_force(self, sonar_angles, sonar_ranges):
   sum = np.zeros(2)
@@ -69,7 +88,7 @@ def calculate_force(self, sonar_angles, sonar_ranges):
   
 \end{lstlisting}
 
-\item \underline{Homing}\\
+\section{Homing}
 \begin{lstlisting}
 rospy.Subscriber("dead_reckoning", Pose, self.callback)
 \end{lstlisting}
@@ -102,15 +121,19 @@ def closed_loop(position,orientation,target):
   
 \end{lstlisting}
 
-\item \underline{Free space}\\
+\section{Free Space}
+
+Das Free Space Verhalten soll dafür sorgen, dass der Roboter in Richtung der freien Fläche im Raum fährt. Die zur Verfügung stehenden Informationen beschränken sich dabei auf die vorhandenen acht Ultraschall Sensoren und deren Entfernungsmessung.
+\\
+Der Algorithmus prüft, ob die größte Entfernung links oder rechts der Hauptachse gemessen wurde und dreht den Roboter entsprechend nach rechts oder links mit einer konstanten Drehrate. 
+\\
+Bei diesem Ansatz werden an zwei Stellen Probleme erwartet. Zum einen wird der Sensor mit der maximalen Entfernung zur Bestimmung der Drehrichtung benutzt. Wenn dieser Sensor allerdings einen Gang misst, der vom Roboter weg verläuft, würde sich der Roboter in diese Richtung orientieren. Dieses Verhalten wäre dementsprechend falsch, da der Gang nicht der freien Fläche entspricht. Um dem entgegen zu wirken, könnte man die Sensorwerte von jeweils der rechten und linken Seite mitteln und darauf basierend die Richtungsentscheidung treffen. Im späteren Schritt der Fusion wird der Free Space Teil allerdings nur eine untergeordnete Rolle spielen, sodass dieses Problem nicht in dieser Form auftritt.\\
+Eine zweite Schwäche liegt darin, dass eine konstante Drehrate in die jeweilige Richtung gesetzt wird. Eine Auswirkung hiervon wäre, dass bei zu hoher Geschiwndigkeit der Roboter gegen ein Hindernis fahren könnte, da die konstante Drehrate nicht auf die Lineargeschwindigkeit angepasst ist und der Kurvenradius demnach größer wird. Eine Lineargeschwindigkeit abhängig von der Entfernung des Sensors mit der niedrigsten Entfernung würde dies beheben. Sollte in der Fusion dies zu einem Problem führen, wird diese Idee entsprechend aufgegriffen. Da allerdings die Kollisionsvermeidung eine höhere Gewichtung in der Nähe einer Wand erhalten wird, sollte dies nicht zu einem Problem führen.
 
 
-\end{itemize}
+\section*{Verhaltensfusion}
 
 
-\subsection*{Verhaltensfusion}
-
-\subsection*{}
 
 
 \end{document}
