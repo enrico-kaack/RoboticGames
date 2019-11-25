@@ -75,16 +75,17 @@ class Fusion:
 
     def fusion(self, collAvoidance, homing, freeSpace):
         output = Twist()
+        temp = Twist()
+        freespace_downweight = 0.7
 
-        output.linear.x = analog_gates.and_gate(homing.linear.x, freeSpace.linear.x)
-        output.angular.z = analog_gates.and_gate(homing.angular.z, freeSpace.angular.z)
-        temp = output
-        #rospy.loginfo(collAvoidance)
-        output.linear.x = analog_gates.prevail_gate(1-collAvoidance.linear.x, output.linear.x)
-        output.angular.z = analog_gates.prevail_gate(collAvoidance.angular.z, output.angular.z)
+        temp.linear.x = analog_gates.and_gate(homing.linear.x, freeSpace.linear.x * freespace_downweight)
+        temp.angular.z = analog_gates.and_gate(homing.angular.z, freeSpace.angular.z * freespace_downweight)
+
+        output.linear.x = analog_gates.invoke_gate(collAvoidance.linear.x, temp.linear.x)
+        output.angular.z = analog_gates.prevail_gate(collAvoidance.angular.z, temp.angular.z)
         print("\t|".join(["\t".join([str(output.linear.x), str(output.angular.z)]), "\t".join([str(temp.linear.x), str(temp.angular.z)]), "\t".join([str(collAvoidance.linear.x), str(collAvoidance.angular.z)]), "\t".join([str(homing.linear.x), str(homing.angular.z)]), "\t".join([str(freeSpace.linear.x), str(freeSpace.angular.z)])]))
 
-        #rospy.loginfo("DONE FUSION")
+
         return output
     
     def calculate_collision_avoidance(self):
@@ -174,7 +175,7 @@ class Fusion:
         else:
             adjustment.angular.z = 1
         
-        adjustment.linear.x  = 0.5
+        adjustment.linear.x  = 1
         return adjustment
 
 
@@ -195,7 +196,7 @@ class Fusion:
         if np.abs(np.arctan2(dir_x, dir_y)) < np.pi/4 and dir_x*dir_x+dir_y*dir_y > 0.01:
             output.linear.x = 0.5
         else:
-            output.linear.x = 0.2
+            output.linear.x = 0.5
         if np.abs(np.arctan2(dir_x,dir_y)) > np.pi/30:
             output.angular.z = np.arctan2(dir_x, dir_y)
 
