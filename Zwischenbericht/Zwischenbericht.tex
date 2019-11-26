@@ -162,20 +162,62 @@ Bei diesem Ansatz werden an zwei Stellen Probleme erwartet. Zum einen wird der S
 Eine zweite Schwäche liegt darin, dass eine konstante Drehrate in die jeweilige Richtung gesetzt wird. Eine Auswirkung hiervon wäre, dass bei zu hoher Geschiwndigkeit der Roboter gegen ein Hindernis fahren könnte, da die konstante Drehrate nicht auf die Lineargeschwindigkeit angepasst ist und der Kurvenradius demnach größer wird. Eine Lineargeschwindigkeit abhängig von der Entfernung des Sensors mit der niedrigsten Entfernung würde dies beheben. Sollte in der Fusion dies zu einem Problem führen, wird diese Idee entsprechend aufgegriffen. Da allerdings die Kollisionsvermeidung eine höhere Gewichtung in der Nähe einer Wand erhalten wird, sollte dies nicht zu einem Problem führen.
 
 
-\section*{Verhaltensfusion}
+\section{Verhaltensfusion}
+Die Verhaltensfusion beschreibt die Kombination der einzelnen Steuerungsinformationen auf der Kollisionsvermeidung, der Free Space Orientierung und der Zielsuche. Hierdurch soll der Roboter sich in Richtung des Ziels (Zielsuche) durch den Raum bewegen können, ohne mit anderen Objekten zu kollidieren (Kollisionsvermeidung) oder in Sackgassen festzustecken (Free Space).
+\\
+Ein Ansatz hierfür ist die Verwendung von analogen Schaltern (Gates). Folgende Schalter stehen zur Verfügung:
+\begin{description}
+    \item[AND-Gate] Das analoge AND Gate funktioniert ähnlich dem logischen AND Gate. Die Ausgabe wächst am schnellsten, wenn beide Eingaben gleichmäßig wachsen. Wenn eine Eingabe 0 ist, gibt es keine Ausgabe.
+    \item[OR-Gate] Die Ausgabe des analogen OR-Gates wird von der Größe beider Eingaben bestimmt. Wenn eine Eingabe 0 ist, so wird die andere Eingabe ausgegeben.
+    \item[XOR-Gate] Wenn beide Eingaben gleich groß sind, wird die Ausgabe 0 sein. ISt eine Eingabe 0, so ist die Ausgabe gleich der anderen Eingabe.
+    \item[Invoke-Gate] Das Invoke-Gate zeigt ein asymetrisches Verhalten. Wenn die Eingabe x steigt, so steigt der Anteil der Eingabe y am Ausgang. Ist die Eingabe x nicht vorhanden, so ist die Ausgabe 0. Ist Eingabe y hingegen 0, wird Eingabe x als Ausgabe genommen.
+    \item[Prevail-Gate]  Wenn Eingabe x 0 ist, wird Eingabe y als Ausgabe genommen. Wenn allerdings x ungleich 0 ist, so dominiert die Eingabe x die Ausgabe.
+\end{description}   
 
+Es gibt zwei verschiedene Datensätze, die in die analogen Gates gegeben werden können. Zum einen kann für jedes Einzelverhalten die berechnete Kraft auf den Roboter fusioniert werden und die Ausgabe in Lineargeschwindigkeit und Winkelgeschwindigkeit umgerechnet werden. Zum anderen kann die in jedem Einzelverhalten berechnete Lineargeschwindigkeit und Winkelgeschwindigkeit durch zwei Netzwerke geleitet werden. Die vorliegende Implementierung setzt auf letzteren Ansatz. Die damit einhergehende Probleme werden im Folgenden diskutiert.
+\subsection{erste Iteration}
+Der erste Ansatz (vgl. \ref{listing:erstesNetzwerk}) besteht aus einer AND Kombination der Zielsuche und des Free Space mit einer darauffolgenden INVOKE Kombination mit der Kollisionsvermeidung. Letzeres Gate soll dafür sorgen, dass die Kollisionsvermeidung keinen Beitrag liefert, solange diese 0 ist. Wenn allerdings ein stärker werdendes Signal der Kollisionsvermeidung geschickt wird, so soll dieses stärker berücksichtigt werden.
+\begin{figure}
+    \begin{lstlisting}
 
+    Homing --------|
+                  AND---------|  
+    Free Space ----|          |x
+                            INVOKE ---------> OUTPUT    
+    Collision voidance -------|y
+    \end{lstlisting}
+    \caption{Netzwerk Verhaltensfusion in erster Iteration (für Lineargeschwindigkeit und Winkelgeschwindigkeit)}
+    \label{listing:erstesNetzwerk}
+\end{figure}
+Praktisches Problem hierbei ist allerdings, dass eine Kollision nicht zuverlässig vermieden werden kann. Grund hierfür liegt in der Lineargeschwindigkeit, die in der Ausgabe nicht 0 ist, auch wenn die Kollisionsvermeidung die Lineargeschwindigkeit auf 0 setzt (siehe Eigenschaften Invoke-Gate).
+\subsection{zweite Iteration}
+\begin{figure}
+    \begin{lstlisting}
+
+    Homing --------|
+                  AND---------|  
+    Free Space ----|          |y
+                            INVOKE ----> LINEARGESCHWINDIGKEIT   
+    Collision voidance -------|x
+------------------------------------------------------------------
+    Homing --------|
+                  AND---------|  
+    Free Space ----|          |y
+                            PREVAIL ----> WINKELGESCHWINDIGKEIT   
+    Collision voidance -------|x
+    \end{lstlisting}
+    \caption{Netzwerk Verhaltensfusion in zweiter Iteration}
+    \label{listing:zweitesNetzwerk}
+\end{figure}
+In der zweiten Iteration (siehe \ref{listing:zweitesNetzwerk}) werden die Lineargeschwindigkeit und die Winkelgeschwindigkeit über zwei verschiedene Netze geregelt. Für die Regelung der Lineargeschwindigkeit wird nun die Kollisionsvermeidung als x Eingabe in das Invoke Gate geführt. Die Kollisionsvermeidung gibt Lineargeschwindigkeit 1 solange kein Grund zum Eingreifen besteht und Lineargeschwindigkeit 0 wenn die Kollisionsvermeidung eingreifen muss. Durch den Anschluss als Eingabe x wird die resultierende Lineargeschwindigkeit unterdrückt, wenn die Kollisionsvermeidung keine Lineargeschwindigkeit zulässt. Ansonsten wird die Lineargeschwindigkeit durch die Zielsuche und Free Space geregelt.
+\\
+Für die Winkelgeschwindigkeit gilt das Gegenteilige Prinzip. Wenn die Kollisionsvermeidung einen Winkelgeschwindigkeit vorgibt, dominiert dies die Ausgabe der Winkelgeschwindigkeit. Ansonsten wird die Ausgabe der Zielsuche und des Free Space genommen.
+\\
+Mehrere Dinge müssen bei der Kombination beachtet werden, damit die Ausgabe korrekt ist. Die Eingabedimension muss vergleichbar sein. Das bedeutet, dass alle Eingaben vergleichbar mit ihrer Wichtigkeit skalieren. Möglich wird dies durch entsprechende Anpassung in den Einzelverhalten, sodass diese vergleichbarere Werte produzieren.
+
+//create visualisation rein ballern
+
+//Compound netzwerk diskutieren
 
 
 \end{document}
-
-
-
-
-
-
-
-
-
-
-
