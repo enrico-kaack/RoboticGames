@@ -58,8 +58,8 @@
 \chapter{Implementierung}
 
 \section{Collision avoidance}
-Um die Kollisionsvermeidung zu verwirklichen, wird die Momentangeschwindigkeit des Roboters durch einen Subscriber ausgelesen. Zusätzlich sind auf die gleiche Weise die Messwerte der Soanrsensoren in Form von Abständen zum nächsten Hindernis bekannt.
-Für die Kollisionsvermeidung wird ein Kraftansatz gewählt, bei welchem die Kraft, welche auf den Roboter durch ein sich näherndes Hindernis ausgeübt wird, die Änderung der Linear- und Winkelgeschwindigkeit bestimmt. Dies ist in der folgenden Funktion \textit{calculate\_force(self, sonar\_angles, sonar\_ranges)} verwirklicht. Dabie handelt es sich bei sonar\_angles um die Winkel, in welchen die Sonarsensoren vom Roboter abstrahlen und bei sonar\_ranges um den jeweils zurückgegebenen Abstand.
+Um die Kollisionsvermeidung zu verwirklichen, wird die Momentangeschwindigkeit des Roboters durch einen Subscriber ausgelesen. Zusätzlich sind auf die gleiche Weise die Messwerte der Sonarsensoren in Form von Abständen zum nächsten Hindernis bekannt.
+Für die Kollisionsvermeidung wird ein Kraftansatz gewählt, bei welchem die Kraft, welche auf den Roboter durch ein sich näherndes Hindernis ausgeübt wird, die Änderung der Linear- und Winkelgeschwindigkeit bestimmt. Dies ist in der folgenden Funktion \textit{calculate\_force(self, sonar\_angles, sonar\_ranges)} verwirklicht. Dabei handelt es sich bei sonar\_angles um die Winkel, in welchen die Sonarsensoren vom Roboter abstrahlen und bei sonar\_ranges um den jeweils zurückgegebenen Abstand.
 \begin{lstlisting}
 def calculate_force(self, sonar_angles, sonar_ranges):
   sum = np.zeros(2)
@@ -120,16 +120,26 @@ Visualisieriung Welt 5\\
 \newline
 
 \section{Homing}
+Um das Homing umzusetzen, wird sowohl die aktuelle Position, die aktuelle Drehung im Raum und die Position des Ziels benötigt. Aus diesen Werten lässt sich dann berechnen wie weit der Roboter noch fahren muss und in welcher Richtung er dies zu tun hat.\\
+Um dies zu ermöglichen, werden die soeben beschriebenen Daten jedoch zuerst benötigt. Diese Daten werden über einen Subscriber erhalten. Dieser wird in der folgenden Zeile gestartet. Werden auf dem abonnierten Kanal neue Informationen veröffentlicht, wird ein Callback aufgerufen. 
 \begin{lstlisting}
 rospy.Subscriber("dead_reckoning", Pose, self.callback)
 \end{lstlisting}
-
+Dieser Callback wird wie folgt definiert. Seine einzige Aufgabe ist es die Positionsdaten sowie die Informationen über die eigene Drehung für den nachfolgend definierten Algorithmus lesbar zur Verfügung zu stellen. Dies geschieht, indem sie in den Instanzvariablen unseres Homing Objekts gespeichert werden.\\
+Da sich der Roboter nur auf der zweidimensionalen Ebene bewegen kann, reichen die X und Y Koordinate, sowie die Drehung um die ansonsten nicht genutzte Z Achse.
 \begin{lstlisting}
 def callback(self, pos):
   self.orientation[0] = pos.orientation.z
   self.position[0] = pos.position.x
   self.position[1] = pos.position.y
 \end{lstlisting}
+Im \textit{closed\_loop(position,orientation,target)} wird die tatsächliche Berechnung für die Geschwindigkeit sowie die antizipierte Drehung durchgeführt.\\
+Dafür wird zuerst ein leeres Objekt im passenden Format erzeugt, indem anschließend die Werte gespeichert werden (Zeile 2).\\
+Anschließend wird für die Dimensionen der X und Y Achse die relative Position vom Ziel zum Roboter berechnet. Einfacher gesagt berechnen diese zwei Zeilen die Entfernung des Roboters zum Ziel auf der X-Achse und der Y-Achse.(Zeile 4+5)\\
+Diese relative Position befindet sich zu dem Zeitpunkt jedoch noch in Weltkoordinaten, also so wie sie ein Betrachter von Oben aus sieht. Diese sind für den Roboter jedoch nicht direkt nutzbar, weshalb die Koordinaten in Relation zu seiner eigenen Position und Drehung berechnet werden müssen. Dafür wird die relative Position des Ziels zum Roboter um die aktuelle Drehung des Roboters gedreht. Die Koordinaten liegen anschließend so vor, wie sie der Roboter sieht, wenn er sich selbst als Nullpunkt betrachtet, welcher der Y-Achse entlang sieht.\\
+Nach seiner Definition ist der Tangens von Alpha das Verhältnis von Ankathete zu Gegenkathete. Wenn wir nun von unserem Roboter im Nullpunkt ausgehen, welcher wissen will, wie stark er sich drehen muss, können wir den Winkel Alpha als den Arcustangens von den relativen X und Y-Koordinaten im Roboterkoordinatensystem berechnen. Damit wissen wir, wie stark sich der Roboter drehen muss, um direkt auf sein Ziel zu zeigen. Im Code wird hierfür \textit{np.arctan2(dir\_x, dir\_y)} genutzt. Es wird eine Funktion mit dem Namen \textit{arctan2} genutzt, da diese im Gegensatz zur normalen Tangensfunktion auch an Polstellen definiert ist, was eine Fallunterscheidung überflüssig macht, wodurch der Code einfacher zu verstehen ist.\\
+Zeile 10 besagt nun, dass wir uns nur unter 2 Bedingungen fortbewegen wollen. 1. wenn der noch zu drehende Winkel kleiner ist als $\pi/4$, was umgerechnet 45 Grad entspricht. 2. Wenn das Ziel noch mehr als 0.1 Einheiten entfernt ist. Treten nicht beide Bedingungen ein, wird keine lineare Bewegung gegeben, sondern es wird ausschließlich gedreht.\\
+Auch gedreht wird nur unter einer Bedingung. Diese Bedingung ist, dass die gewünschte Drehung kleiner ist als $\pi/30$, was 6 Grad entspricht. Dies wurde als Grenze gewählt, damit der Roboter sich nicht in jedem Zug zwangsweise minimal dreht um die optimale Drehung zu haben, da dies bei Rauschen dazu führt, dass der Roboter sich deutlich langsamer bewegt. Es ist auch kein Problem, dass sich der Roboter nicht bis 100\% auf das Ziel ausrichtet, da der Winkel bei Bewegung Richtung Ziel zunimmt und somit in jedem Fall eine Korrektur erfolgt, sollte der gefahrene Winkel nicht ausreichen. Gedreht werden soll sich dann um ein Drittel des gewünschten Winkels, weil dadurch eine fließende Drehung entsteht.
 
 \begin{lstlisting}
 def closed_loop(position,orientation,target):
@@ -151,6 +161,9 @@ def closed_loop(position,orientation,target):
   return output
   
 \end{lstlisting}
+
+Zu verbessern wäre beim Homing, dass der Loop und der Subscriber nicht zwangsläufig gleich getaktet sind, wodurch der Loop möglicherweise mit veralteten Informationen arbeitet, die ein falsches Verhalten hervorrufen. Dies ist jedoch nur schwer zu korrigieren, da bei der Fusion zwei Subscriber Informationen bekommen, man den Loop aber nur auf einen der Subscriber ausrichten kann.\\
+Eine weitere Verbesserung wäre es, nicht immer um ein Drittel der Zieldrehung zu drehen, da es dadurch möglich ist am Rande der 6 Grad hängen zu bleiben und dadurch oft zu drehen, was die Intention der 6 Grad Abfrage zunichte Macht. Besser wäre an dieser Stelle eine Funktion, welche für fließende Bewegungen sorgt, jedoch für eine gewünschte Drehung knapp über 6 Grad eine möglichst genaue Drehung auf das Ziel veranlasst. Dadurch würde der Roboter seinen Kurs seltener optimieren müssen, wodurch er schneller vorankommt.
 
 \section{Free Space}
 
