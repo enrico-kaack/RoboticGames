@@ -1,2 +1,19 @@
 *.pyc
 p3dx
+
+
+#tex intermediate files
+*.aux
+*.lof
+*.log
+*.lot
+*.fls
+*.out
+*.toc
+*.fmt
+*.fot
+*.cb
+*.cb2
+.*.lb
+*.fdb_latexmk
+*synctex.gz

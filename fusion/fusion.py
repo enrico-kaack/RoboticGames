@@ -164,9 +164,8 @@ class Fusion:
 
     def calculate_freespace(self):
         adjustment = Twist()
-        biggest_distance = np.amax(self.sonar_ranges)
 
-        # check from which angle this small range comes from
+        # check from which angle this big range comes from
         indices_biggest_ranges = np.argmax(self.sonar_ranges)
         id_biggest_range = indices_biggest_ranges if not isinstance(indices_biggest_ranges, list) else indices_biggest_ranges[0]
         
