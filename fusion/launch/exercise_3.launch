@@ -1,0 +1,11 @@
+<launch>
+        <node name="laser_to_sonar"      type="laser_to_sonar.py"     pkg="robotic_games_tutorium"/>
+        <node name="collision_avoidance" type="exercise_1.py"         pkg="robotic_games_tutorium"/>
+	<node name="dead_reckoning"      type="dead_reckoning_sim.py" pkg="robotic_games_tutorium" args="0.1"/>
+	<node name="homing"              type="exercise_2.py"         pkg="robotic_games_tutorium"/>
+	<node name="behavior_fusion"     type="exercise_3.py"         pkg="robotic_games_tutorium" args="keyboard_vel homing_vel coll_vel"/>
+
+	<node name="record" pkg="rosbag" type="record" args="-O homing_path /p3dx/p3dx/base_pose_ground_truth"/>
+	<include file="$(find robotic_games_tutorium)/exercise_3/gazebo.launch"/>
+
+</launch>

@@ -38,7 +38,9 @@ plt.xlabel("X Position")
 plt.title("Pfad der Roboter")
 plt.axis('equal')
 plt.legend()
-plt.show()
+plt.savefig("report_pfad.png")
+plt.clf()
+
 
 diff = (point_list_cat- point_list_mouse)**2
 
@@ -48,7 +50,8 @@ plt.title("Roboterabstand")
 plt.ylabel("Distanz")
 plt.xlabel("Zeit")
 plt.legend()
-plt.show()
+plt.savefig("report_distance.png")
+plt.clf()
 
 
 
