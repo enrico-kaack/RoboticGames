@@ -226,11 +226,27 @@ In der zweiten Iteration (siehe \ref{listing:zweitesNetzwerk}) werden die Linear
 \\
 Für die Winkelgeschwindigkeit gilt das Gegenteilige Prinzip. Wenn die Kollisionsvermeidung einen Winkelgeschwindigkeit vorgibt, dominiert dies die Ausgabe der Winkelgeschwindigkeit. Ansonsten wird die Ausgabe der Zielsuche und des Free Space genommen.
 \\
-Mehrere Dinge müssen bei der Kombination beachtet werden, damit die Ausgabe korrekt ist. Die Eingabedimension muss vergleichbar sein. Das bedeutet, dass alle Eingaben vergleichbar mit ihrer Wichtigkeit skalieren. Möglich wird dies durch entsprechende Anpassung in den Einzelverhalten, sodass diese vergleichbarere Werte produzieren.
+Mehrere Dinge müssen bei der Kombination beachtet werden, damit die Ausgabe korrekt ist. Die Eingabedimension muss vergleichbar sein. Das bedeutet, dass alle Eingaben vergleichbar mit ihrer Wichtigkeit skalieren. Möglich wird dies durch entsprechende Anpassung in den Einzelverhalten, sodass diese vergleichbarere Werte produzieren. Darüberhinaus müssen widersprüchliche Informationen sinnvoll verarbeitet werden (Zielsuche: Drehung nach rechts, Free Space: Drehung nach links). Dies ist in der aktuellen Implementierung noch unzureichend beachtet (siehe \ref{chap:ausblick})
 
-//create visualisation rein ballern
+\subsubsection{Ergebnisse}
+\begin{figure}[]
+    \centering
+    \includegraphics[width=\textwidth]{report_pfad.png}
+    \caption{Pfad der Roboter bei Verhaltensfusion}
+    \label{fig:pfadFusion}
+\end{figure}
+\begin{figure}[]
+    \centering
+    \includegraphics[width=\textwidth]{report_distance.png}
+    \caption{Entfernung zwischen den Robotern}
+    \label{fig:distanceFusion}
+\end{figure}
+Der Pfad der Katze in \ref{fig:pfadFusion} verläuft optimal, um die Maus zu erreichen. Bei 0|2 bis ungefähr 1.5|2 begindet sich ein Hinderniss, das umfahren wird, um dann wieder zur Maus aufzuschließen. Dies zeigt sich auch in der linear kleiner werdenden Entfernung zwischen den beiden Robotern. Die Distanz wird nicht auf 0 runter gehen, da in der aktuellen Implementierung die Maus auch als Hindernis erkannt wird und demnach die Kollisionsvermeidung Vorrang erhält, wenn sich die Katze zu sehr der Maus annähert.
 
-//Compound netzwerk diskutieren
 
+\subsection*{Ausblick} \label{chap:ausblick}
+Ein sinnvoller Ansatz, der evaluiert werden kann, besteht in der Benutzung von Zusammengesetzten (Compound) Netzwerken. Dabei befindet sich der Roboter in verschiedenen Modi und hat je nach Modi unterschiedliche Verhaltensfusionen. Ein Modus wäre beispielsweise ein direkter Sichtkontakt zur Maus, sodass die Kollisionsvermeidung ausgeschaltet werden kann und die Katze näher an die Maus heranfahren kann. Im Modus Sichtkontakt unterbrochen würde wiederum die Kollisionsvermeidung aktiv werden und gleichzeitig werden Free Space und Zielsuche anders gewichtet.
+\\
+Ein weiterer Schritt könnte natürlich sein, einen SLAM Algorithmus zu entwickeln, um während der Verfolgung die Umgebung zu scannen und dann nach genug Informationen über den Raum keine Zielsuche mehr durchzuführen sondern eine Wegplanung über bpsw. einen gitterbasierten Dijkstra Ansatz erfolgt.
 
 \end{document}
