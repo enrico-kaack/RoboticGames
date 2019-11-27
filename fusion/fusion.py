@@ -145,16 +145,21 @@ class Fusion:
             F_y = np.sum(a)
 
             rotationAngle = np.arctan(F_y / F_x)
+            
+            if -rotationAngle == self.last_angle:
+                rotationAngle = self.last_angle
 
 
             #linearForce = 1/((self.sonar_ranges[3] + self.sonar_ranges[4]) / 2) 
             
             #if linearForce < 0.1:
             #    linearForce = 0.1
-            linearForce = 1
+            linearForce = np.clip(F_x / 20, 0, 1)
         else:
             linearForce = 0
             rotationAngle = 0
+        
+        self.last_angle = rotationAngle
 
         velocity_adjustment = Twist()
         velocity_adjustment.linear.x  = 1-linearForce
