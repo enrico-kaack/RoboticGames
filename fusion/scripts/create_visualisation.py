@@ -38,7 +38,7 @@ plt.xlabel("X Position")
 plt.title("Pfad der Roboter")
 plt.axis('equal')
 plt.legend()
-plt.savefig("report_pfad.png")
+plt.savefig("report_pfad.png", dpi=600)
 plt.clf()
 
 
@@ -50,7 +50,7 @@ plt.title("Roboterabstand")
 plt.ylabel("Distanz")
 plt.xlabel("Zeit")
 plt.legend()
-plt.savefig("report_distance.png")
+plt.savefig("report_distance.png", dpi=600)
 plt.clf()
 
 
