@@ -168,7 +168,7 @@ class Fusion:
             
             #if linearForce < 0.1:
             #    linearForce = 0.1
-            linearForce = 1
+            linearForce = np.clip(F_x /20, 0,1)
         else:
             linearForce = 0
             rotationAngle = 0
