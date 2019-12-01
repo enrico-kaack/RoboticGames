@@ -63,7 +63,7 @@
 	        p3dx_velocity_controller
 	        --shutdown-timeout 3"
 	        output="screen"/>
-		<!-- <node name="free_space" type="fusion.py" pkg="fusion"/> -->
+		<node name="free_space" type="fusion.py" pkg="fusion"/>
 
 		<!-- ros_control p3rd launch file -->
 		<!-- <include file="$(find p3dx_control)/launch/control.launch" /> -->
