@@ -59,7 +59,7 @@
 
 \section{Collision avoidance}
 Um die Kollisionsvermeidung zu verwirklichen, wird die Momentangeschwindigkeit des Roboters durch einen Subscriber ausgelesen. Zusätzlich sind auf die gleiche Weise die Messwerte der Sonarsensoren in Form von Abständen zum nächsten Hindernis bekannt.
-Für die Kollisionsvermeidung wird ein Kraftansatz gewählt, bei welchem die Kraft, welche auf den Roboter durch ein sich näherndes Hindernis ausgeübt wird, die Änderung der Linear- und Winkelgeschwindigkeit bestimmt. Dies ist in der folgenden Funktion \textit{calculate\_force(self, sonar\_angles, sonar\_ranges)} verwirklicht. Dabei handelt es sich bei sonar\_angles um die Winkel, in welchen die Sonarsensoren vom Roboter abstrahlen und bei sonar\_ranges um den jeweils zurückgegebenen Abstand.
+Für die Kollisionsvermeidung wird ein Potentialfeldansatz gewählt, bei welchem die Kraft, welche auf den Roboter durch ein sich näherndes Hindernis ausgeübt wird, die Änderung der Linear- und Winkelgeschwindigkeit bestimmt. Dies ist in der folgenden Funktion \textit{calculate\_force(self, sonar\_angles, sonar\_ranges)} verwirklicht. Dabei handelt es sich bei sonar\_angles um die Winkelzwischen Sensor- und Roboterausrichtung und bei sonar\_ranges um den jeweils zurückgegebenen Abstand.
 \begin{lstlisting}
 def calculate_force(self, sonar_angles, sonar_ranges):
   sum = np.zeros(2)
@@ -89,10 +89,10 @@ def calculate_force(self, sonar_angles, sonar_ranges):
   return force
   
 \end{lstlisting}
-Um die auf den gesamten Roboter wirkende \''Kraft\'' zu bestimmen, wird die Resultierende aus allen von den Sonarsensoren aufgezeichneten Abständen bestimmt. Dazu werden diese in der for-Schleife ab Zeile 4 zunächst in ihre x- und y-Komponenten unterteilt und diese im Array \textit{sum} aufsummiert. Da die \''Kraft\'' entgegen des Roboters wirken soll, wird dieses negiert und anschließend der auf den Roboter wirkende Vektor mithilfe der Funktion \textit{numpy.linalg.norm()} berechnet.\\
-Sollte der resultierende Abstand zu einem Hindernis noch größer als 10m sein, wird der Fahrtweg des Roboters nicht verändert, es wird ein Nullarray zurückgegeben $($Zeile 14f.$)$.\\
+Um die auf den gesamten Roboter wirkende \''Kraft\'' zu bestimmen, wird die Resultierende aus allen von den Sonarsensoren aufgezeichneten Abstandsvektoren bestimmt. Dazu werden diese in der for-Schleife ab Zeile 4 zunächst in ihre x- und y-Komponenten unterteilt und diese im Array \textit{sum} aufsummiert. Da die \''Kraft\'' entgegen des Roboters wirken soll, wird dieses negiert und anschließend der auf den Roboter wirkende Vektor mithilfe der Funktion \textit{numpy.linalg.norm()} berechnet.\\
+Sollte der resultierende Abstand zu einem Hindernis größer als ein bestimmter Wert, hier 10, sein, wird der Fahrtweg des Roboters nicht verändert, es wird ein Nullarray zurückgegeben $($Zeile 14f.$)$.\\
 In jedem anderen Fall wird das Array \textit{force[ ]} erstellt und zurückgegeben, wobei \textit{force[0]} die Änderung der Linearbeschleunigung beinhaltet und \textit{force[1]} die Änderung der Winkelbeschleunigung. Die Berechnung der Änderung der Linear- und Winkelbeschleunigung erfolgt mithilfe der Funktion \textit{numpy.clip(a, a\_min, a\_max)}, welche den Wert von a auf das Intervall $[$a\_min, a\_max$]$ beschränkt. Liegt der Wert a unterhalb a\_min, wird a\_min zurückgegeben, liegt a überhalb a\_max, wird a\_max zurückgegeben. \\
-Da die Änderung der Lineargeschwindigkeit an den Roboter in der Form 1 - $\Delta$x übermittelt wird, wird der x-Anteil des resultierenden Vektors / 20 hierfür auf das Intervall $[$0,1$]$ begrenzt, da der Roboter nicht rückwärts fahren soll $($negative Linearbeschleunigung$)$ $($Zeile 19$)$. Damit wird die Lineargeschwindigkeit nicht geändert, wenn der Wert x/20 oberhalb von 1 liegt, also der Abstand des Roboters zum Hindernis in x-Richtung noch groß genug ist, und maximal geändert, sollte der Wert negativ sein. Dieser Fall sollte allerdings nie eintreten, da dies bedeuten würde, dass der Roboter bereits an/hinter der Wand steht.\\
+Da die Änderung der Lineargeschwindigkeit an den Roboter in der Form 1 - $\Delta$x übermittelt wird, wird der x-Anteil des resultierenden Vektors / 20 hierfür auf das Intervall $[$0,1$]$ begrenzt, da der Roboter nicht rückwärts fahren soll $($negative Linearbeschleunigung$)$ $($Zeile 19$)$. Damit wird die Lineargeschwindigkeit nicht geändert, wenn der Wert x/20 oberhalb von 1 liegt, also der Abstand des Roboters zum Hindernis in x-Richtung noch groß genug ist, und maximal geändert, sollte der Wert negativ sein. Dieser Fall kann allerdings nie eintreten, da dies bedeuten würde, dass der Roboter bereits an/hinter der Wand steht.\\
 Die Änderung der Winkelbeschleunigung wird über den negativen arctan2 des resultierenden Vektors, begrenzt auf $[$-$\pi$/2, $\pi$/2$]$, bestimmt $($Zeile 20$)$. Dabei sind die Maximalwerte so gewählt, dass sich der Roboter in einem Schritt nicht zu viel dreht, sondern dies auf mehrere Schritte aufgeteilt wird.\\
 Sollte der Roboter genau senkrecht auf eine Ecke zufahren, kann der Fall auftreten, dass die resultierende \''Kraft\'' genau senkrecht auf den Roboter wirkt bzw. dadurch die Änderung der Winkelbeschleunigung zwischen beiden Seiten alterniert, sodass der Roboter sich nicht befreien kann. Dies wird abgefangen, indem die Änderung der Winkelbeschleunigung in diesem Fall auf den positiven Fall festgesetzt wird $($Zeile  22f.$)$.
 Die zurückgegebenen Werte werden dem Roboter mithilfe eines Publishers übermittelt.\\
@@ -115,8 +115,7 @@ Visualisieriung Welt 5\\
 \includegraphics[width=290pt]{roboter_pfad5.jpg}\\
 \end{centering}
 
-
-\textcolor{red}{Diskussion $\rightarrow$ Verbesserungen?}
+Wie in den Abbildungen zu sehen ist, wird die Winkelgeschwindigkeit des Roboters immer um einen bestimmten Wert geändert, sowas der Roboter nach einer Einschwingzeit immer dem gleichen Pfad folgt. Dies ist insbesondere für die Funktionalität der Maus nicht sinnvoll, wird allerdings durch die Verbindung der Kollisionsvermeidung mit den nachfolgend vorgestellten Funktionalitäten verbessert. Ansonsten konnte die Simulation alle getesteten Welten ohne große Probleme meistern, demzufolge wir mit der Implementation der Collision Avoidance weitestgehend zufrieden sind.
 \newline
 
 \section{Homing}
