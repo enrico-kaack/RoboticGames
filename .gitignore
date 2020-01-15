@@ -1,5 +1,4 @@
 *.pyc
-p3dx
 
 
 #tex intermediate files
@@ -17,3 +16,4 @@ p3dx
 .*.lb
 *.fdb_latexmk
 *synctex.gz
+.vscode/*
