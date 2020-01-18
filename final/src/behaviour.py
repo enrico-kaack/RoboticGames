@@ -17,8 +17,8 @@ class Position:
     def __repr__(self):
         return "{}|{}".format(self.x , self.y)
 
-    def distanceTo(target):
-        return np.sqrt(np.sqr(target.x - self.x) + np.sqr(target.y- self.y) )
+    def distanceTo(self, target):
+        return np.sqrt(np.square(target.x - self.x) + np.square(target.y- self.y) )
 
 class Velocity:
     def __init__(self, linear, angular):
@@ -50,7 +50,7 @@ class Behaviour:
             rospy.Subscriber("/cat/sonar", PointCloud, self.sonar_callback)
             
             #ros callback listener for target information
-            rospy.Subscriber("/mouse/base_pose_ground_truth", Odometry, self.positionTargetCallback)
+            rospy.Subscriber("/mouse/base_pose_ground_truth", Odometry, self.positionAndOrientationTargetCallback)
 
             #ros publisher to give control commands
             self.pub = rospy.Publisher("/cat/p3dx_velocity_controller/cmd_vel", Twist, queue_size=10)
@@ -68,20 +68,46 @@ class Behaviour:
 
 
         #init main loop
-        while not rospy.is_shutdown():   
-            self.simulatePositions()
+        while not rospy.is_shutdown():  
+            #self.simulatePosition(self.roboterType, self.positionSelf, self.orientationSelf)
+            selfPosOr, targetPosOr = self.simulatePositions() 
+            
+            direction = self.calcBestCombination(selfPosOr, targetPosOr)
+            directionTranslations = [Velocity(1, -1), Velocity(1, -0.5), Velocity(1, 0.0), Velocity(1, 0.5), Velocity(1, 1.0)]
+            toGo = directionTranslations[direction]
+            output = Twist()
+            output.linear.x = toGo.linear
+            output.angular.z = toGo.angular
+            #self.pub.publish(output)
+    """
+    selfPostionOrientations: [[Position...], [Orientation...]]
+    """
+    def calcBestCombination(self, selfPosOrientations, targetPosOrientations):
+        distances = []
 
-    """"
+        for (indexSelf, selfPos) in enumerate(selfPosOrientations[0]):
+            selfDistances = []
+            for (index, targetPos) in enumerate(targetPosOrientations[0]):
+                distance = selfPos.distanceTo(targetPos)
+                selfDistances.append(distance)
+            selfMin = np.min(np.array(selfDistances)) #TODO robotype
+            distances.append(selfMin)
+
+        indexMin = np.argmin(np.array(distances)) #TODO robotype 
+        print(distances, indexMin)
+        return indexMin
+
+    """
     Returns the simulated positions in order: self, target
-    """"
+    """
     def simulatePositions(self):
         if self.roboterType == RoboterType.CAT:
-            cat = simulatPosition(RoboterType.CAT, self.positionSelf, self.orientationSelf)
-            mouse = simulatePosition(RoboterType.MOUSE, self.positionTarget, self.orientationTarget)
+            cat = self.simulatePosition(RoboterType.CAT, self.positionSelf, self.orientationSelf)
+            mouse = self.simulatePosition(RoboterType.MOUSE, self.positionTarget, self.orientationTarget)
             return cat, mouse
         else: 
-            cat = simulatPosition(RoboterType.CAT, self.positionTarget, self.orientationTarget)
-            mouse = simulatePosition(RoboterType.MOUSE, self.positionSelf, self.orientationSelf)
+            cat = self.simulatePosition(RoboterType.CAT, self.positionTarget, self.orientationTarget)
+            mouse = self.simulatePosition(RoboterType.MOUSE, self.positionSelf, self.orientationSelf)
             return mouse, cat
 
     def simulatePosition(self, roboterType, position, orientation):
@@ -90,11 +116,12 @@ class Behaviour:
         #calcualte the new positions
         #deltaX = arcsin w (w = angle) * d (distance in m, assume the distance is smaller when turning)
         #deltaY = arccos w (w = angle) * d
+
         if roboterType == RoboterType.CAT:
-            w = np.array([-1.0, -0.6, 0.0, 0.6, 1.0]) + np.repeat(orientation, 5) #world orientation with own variation
+            w = np.pi * 0.5 + np.array([-1.0, -0.6, 0.0, 0.6, 1.0]) + np.repeat(-1*orientation, 5) #world orientation with own variation
             h = np.array([0.7, 0.9, 1.0, 0.9, 0.7])
         else:
-            w = np.array([-1.0, -0.6, 0.0, 0.6, 1.0]) + np.repeat(orientation, 5) #world orientation with own variation
+            w = np.pi * 0.5 + np.array([-1.0, -0.6, 0.0, 0.6, 1.0]) + np.repeat(-1*orientation, 5) #world orientation with own variation
             h = np.array([0.7, 0.9, 1.0, 0.9, 0.7])
 
         deltaX = np.sin(w) * h
@@ -111,7 +138,7 @@ class Behaviour:
 
         #estimate new orientation
         newOrientation = w #could be improved
-        return np.arra([newPos, newOrientation])
+        return np.array([newPos, newOrientation])
         
 
 
@@ -131,7 +158,7 @@ class Behaviour:
         
     def positionAndOrientationTargetCallback(self, target_pos):
         #calc orientation from pose information
-        fake_odom=pos.pose.pose
+        fake_odom=target_pos.pose.pose
         euler=euler_from_quaternion([fake_odom.orientation.x,fake_odom.orientation.y,fake_odom.orientation.z,fake_odom.orientation.w])
         orientation =euler[2]
 
