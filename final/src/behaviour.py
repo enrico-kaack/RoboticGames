@@ -43,6 +43,10 @@ class Behaviour:
         self.roboterType = roboterType
         self.pub = None
 
+        self.sonar_angles = np.array([-90.0, -50.0, -30.0, -10.0, 10.0, 30.0, 50.0, 90.0])
+        self.sonar_angles = self.sonar_angles / 360.0 * 2 * np.pi
+        self.sonar_ranges = np.zeros(len(self.sonar_angles))
+
         if self.roboterType == RoboterType.CAT:
         #ros callback listener for own information
             rospy.Subscriber("/cat/p3dx_velocity_controller/odom", Odometry, self.velocitySelfCallback)
@@ -73,7 +77,7 @@ class Behaviour:
             selfPosOr, targetPosOr = self.simulatePositions() 
             
             direction = self.calcBestCombination(selfPosOr, targetPosOr)
-            directionTranslations = [Velocity(1, -1), Velocity(1, -0.5), Velocity(1, 0.0), Velocity(1, 0.5), Velocity(1, 1.0)]
+            directionTranslations = [Velocity(1, -2), Velocity(1, -1), Velocity(1, 0.0), Velocity(1, 1), Velocity(1, 2.0)]
             toGo = directionTranslations[direction]
             output = Twist()
             output.linear.x = toGo.linear
@@ -97,15 +101,22 @@ class Behaviour:
             else: 
                 targetOptimal = np.min(np.array(selfDistances)) 
             distances.append(targetOptimal)
-
+        distancesWithoutColAvoidance = distances
         indexOptimal = None
         if self.roboterType == RoboterType.CAT:
+            distances = np.array(distances) + self.getWallDistance()
             indexOptimal = np.argmin(np.array(distances))  
         else:
+            distances = np.array(distances) - self.getWallDistance()
             indexOptimal = np.argmax(np.array(distances)) 
 
-        print(distances, indexOptimal)
+        print(distances-distancesWithoutColAvoidance, indexOptimal)
         return indexOptimal
+
+    def getWallDistance(self):
+        distances = [np.min([self.sonar_ranges[0], self.sonar_ranges[1]]), self.sonar_ranges[2],np.min([self.sonar_ranges[3], self.sonar_ranges[4]]), self.sonar_ranges[5], np.min([self.sonar_ranges[6], self.sonar_ranges[7]])]
+        distances = -0.7*np.sqrt(np.array(distances)) + 200 #parameter for collision avoidance
+        return distances
 
     """
     Returns the simulated positions in order: self, target
