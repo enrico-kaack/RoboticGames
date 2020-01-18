@@ -78,7 +78,7 @@ class Behaviour:
             output = Twist()
             output.linear.x = toGo.linear
             output.angular.z = toGo.angular
-            #self.pub.publish(output)
+            self.pub.publish(output)
     """
     selfPostionOrientations: [[Position...], [Orientation...]]
     """
@@ -90,12 +90,22 @@ class Behaviour:
             for (index, targetPos) in enumerate(targetPosOrientations[0]):
                 distance = selfPos.distanceTo(targetPos)
                 selfDistances.append(distance)
-            selfMin = np.min(np.array(selfDistances)) #TODO robotype
-            distances.append(selfMin)
+            
+            targetOptimal = None
+            if self.roboterType == RoboterType.CAT:
+                targetOptimal = np.max(np.array(selfDistances)) 
+            else: 
+                targetOptimal = np.min(np.array(selfDistances)) 
+            distances.append(targetOptimal)
 
-        indexMin = np.argmin(np.array(distances)) #TODO robotype 
-        print(distances, indexMin)
-        return indexMin
+        indexOptimal = None
+        if self.roboterType == RoboterType.CAT:
+            indexOptimal = np.argmin(np.array(distances))  
+        else:
+            indexOptimal = np.argmax(np.array(distances)) 
+
+        print(distances, indexOptimal)
+        return indexOptimal
 
     """
     Returns the simulated positions in order: self, target
