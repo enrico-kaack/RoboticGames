@@ -47,6 +47,9 @@ class Behaviour:
         self.sonar_angles = self.sonar_angles / 360.0 * 2 * np.pi
         self.sonar_ranges = np.zeros(len(self.sonar_angles))
 
+        self.maxLinVel = 1.0
+        self.maxAngVel = 1.0
+
         if self.roboterType == RoboterType.CAT:
         #ros callback listener for own information
             rospy.Subscriber("/cat/p3dx_velocity_controller/odom", Odometry, self.velocitySelfCallback)
@@ -58,6 +61,9 @@ class Behaviour:
 
             #ros publisher to give control commands
             self.pub = rospy.Publisher("/cat/p3dx_velocity_controller/cmd_vel", Twist, queue_size=10)
+
+            self.maxLinVel = 0.4
+            self.maxAngVel = 0.8
         else:
             #ros callback listener for own information
             rospy.Subscriber("/mouse/p3dx_velocity_controller/odom", Odometry, self.velocitySelfCallback)
@@ -70,6 +76,9 @@ class Behaviour:
             #ros publisher to give control commands
             self.pub = rospy.Publisher("/mouse/p3dx_velocity_controller/cmd_vel", Twist, queue_size=10)
 
+            self.maxLinVel = 0.35
+            self.maxAngVel = 1.0
+
 
         #init main loop
         while not rospy.is_shutdown():  
@@ -80,8 +89,8 @@ class Behaviour:
             directionTranslations = [Velocity(1, -2), Velocity(1, -1), Velocity(1, 0.0), Velocity(1, 1), Velocity(1, 2.0)]
             toGo = directionTranslations[direction]
             output = Twist()
-            output.linear.x = toGo.linear
-            output.angular.z = toGo.angular
+            output.linear.x = np.interp(toGo.linear, [0,1], [0, maxLinVel])
+            output.angular.z = np.interp(toGo.angular, [0,1], [0, maxAngVel])
             self.pub.publish(output)
     """
     selfPostionOrientations: [[Position...], [Orientation...]]
