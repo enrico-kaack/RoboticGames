@@ -8,6 +8,7 @@ from geometry_msgs.msg import Pose
 from geometry_msgs.msg import Twist
 #import analog_gates
 from tf.transformations import euler_from_quaternion
+from analog_gates import invoke_gate, prevail_gate
 
 class Position:
     def __init__(self, x, y):
@@ -25,6 +26,9 @@ class Velocity:
         self.linear = linear
         self.angular = angular
 
+    def __repr__(self):
+        return "lin: {}|ang: {}".format(self.linear, self.angular)
+
 class RoboterType:
     MOUSE = 1
     CAT = 2
@@ -39,6 +43,8 @@ class Behaviour:
         self.velocity = Velocity(0.0, 0.0)
         self.orientationSelf = 0.0
         self.orientationTarget = 0.0
+        self.last_angle = 0.0
+
 
         self.roboterType = roboterType
         self.pub = None
@@ -88,10 +94,22 @@ class Behaviour:
             direction = self.calcBestCombination(selfPosOr, targetPosOr)
             directionTranslations = [Velocity(1, -2), Velocity(1, -1), Velocity(1, 0.0), Velocity(1, 1), Velocity(1, 2.0)]
             toGo = directionTranslations[direction]
+            collAvoidanceOutput = self.performCollisionAvoidances(toGo)
             output = Twist()
-            output.linear.x = np.interp(toGo.linear, [0,1], [0, maxLinVel])
-            output.angular.z = np.interp(toGo.angular, [0,1], [0, maxAngVel])
+            output.linear.x = np.interp(collAvoidanceOutput.linear, [-1,1], [-self.maxLinVel, self.maxLinVel])
+            output.angular.z = np.interp(collAvoidanceOutput.angular, [-1,1], [-self.maxAngVel, self.maxAngVel])
+            print("OutpuColAvoudancet", collAvoidanceOutput.angular)
             self.pub.publish(output)
+
+            
+    def performCollisionAvoidances(self, toGo):
+        collAvoidance = self.calculate_collision_avoidance()
+        distanceToTarget = self.positionSelf.distanceTo(self.positionTarget)
+        output = Velocity(0,0)
+        output.linear = toGo.linear
+        output.angular = prevail_gate(collAvoidance.angular, toGo.angular)
+        return output
+
     """
     selfPostionOrientations: [[Position...], [Orientation...]]
     """
@@ -113,10 +131,10 @@ class Behaviour:
         distancesWithoutColAvoidance = distances
         indexOptimal = None
         if self.roboterType == RoboterType.CAT:
-            distances = np.array(distances) + self.getWallDistance()
+            distances = np.array(distances) #+ self.getWallDistance()
             indexOptimal = np.argmin(np.array(distances))  
         else:
-            distances = np.array(distances) - self.getWallDistance()
+            distances = np.array(distances) ##- self.getWallDistance()
             indexOptimal = np.argmax(np.array(distances)) 
 
         print(distances-distancesWithoutColAvoidance, indexOptimal)
@@ -170,6 +188,49 @@ class Behaviour:
         newOrientation = w #could be improved
         return np.array([newPos, newOrientation])
         
+
+    def calculate_collision_avoidance(self):
+        for i, self.sonar_range in enumerate(self.sonar_ranges):
+            if self.sonar_range == 0.0:
+                rospy.logerr('Catched Zero')
+                self.sonar_ranges[i] = 1e-12
+
+        threshold = 0.6
+        if np.min([self.sonar_ranges[0], self.sonar_ranges[1], self.sonar_ranges[2], self.sonar_ranges[3], self.sonar_ranges[4], self.sonar_ranges[5], self.sonar_ranges[6], self.sonar_ranges[7]]) < threshold:
+            
+            #threshold on force = distance
+            distancesWithThreshold = (1/self.sonar_ranges * -1) - threshold
+
+            weight = np.array([0.2, 0.3, 0.4, 0.8, 0.8, 0.4, 0.3, 0.2])
+
+            b = np.sin(self.sonar_angles) * distancesWithThreshold * weight
+            a = np.cos(self.sonar_angles) * distancesWithThreshold * weight
+
+            F_x = np.sum(b)
+            F_y = np.sum(a)
+
+            rotationAngle = np.arctan(F_y / F_x)
+            
+            if -rotationAngle == self.last_angle:
+                rotationAngle = self.last_angle
+
+
+            #linearForce = 1/((self.sonar_ranges[3] + self.sonar_ranges[4]) / 2) 
+            
+            #if linearForce < 0.1:
+            #    linearForce = 0.1
+            linearForce = np.clip(F_x / 20, 0, 1)
+        else:
+            linearForce = 0
+            rotationAngle = 0
+        
+        self.last_angle = rotationAngle
+
+        velocity_adjustment = Velocity(0.0, 0.0)
+        velocity_adjustment.linear  = 1-linearForce
+        velocity_adjustment.angular = rotationAngle
+
+        return velocity_adjustment
 
 
 
