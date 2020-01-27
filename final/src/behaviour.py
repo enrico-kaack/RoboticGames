@@ -107,7 +107,11 @@ class Behaviour:
         distanceToTarget = self.positionSelf.distanceTo(self.positionTarget)
         output = Velocity(0,0)
         output.linear = toGo.linear
-        output.angular = prevail_gate(collAvoidance.angular, toGo.angular)
+
+        if np.abs(np.min(self.sonar_ranges) - distanceToTarget)<0.1:  #smallest sonar distance inside the range with distance to target
+            output.angular = toGo.angular
+        else:
+            output.angular = prevail_gate(collAvoidance.angular, toGo.angular)
         return output
 
     """
