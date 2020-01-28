@@ -83,11 +83,12 @@ class Behaviour:
     def loop(self):
         while not rospy.is_shutdown():                          
             bestCombination = self.calcBestCombination(self.positions, self.orientations, self.steps)
-            toGo = self.choices[bestCombination[self.roboterType]]
+            toGo = self.choices[bestCombination[0][self.roboterType]]
             collAvoidanceOutput = self.performCollisionAvoidances(toGo)
             output = Twist()
             output.linear.x = np.interp(collAvoidanceOutput.linear, [-1,1], [-self.maxLinVel[self.roboterType], self.maxLinVel[self.roboterType]])
             output.angular.z = np.interp(collAvoidanceOutput.angular, [-1,1], [-self.maxAngVel[self.roboterType], self.maxAngVel[self.roboterType]])
+            print(toGo)
             self.pub.publish(output)
             
     """
@@ -266,7 +267,7 @@ class Behaviour:
         for i, sonar_range in enumerate(self.sonar_ranges[self.roboterType]):
             if sonar_range == 0.0:
                 rospy.logerr('Catched Zero')
-                self.sonar_ranges[i] = 1e-12
+                self.sonar_ranges[self.roboterType][i] = 1e-12
 
         threshold = 0.6
         sonar_ranges = self.sonar_ranges[self.roboterType]
