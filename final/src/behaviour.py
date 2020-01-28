@@ -196,9 +196,9 @@ class Behaviour:
         sonarPoints = currentSonarScan.points
 
         #berechnung des Abstands
-        self.sonarRanges[roboterType] = np.zeros(len(self.sonar_angles))
-        for i in range(0, len(self.sonarRanges[roboterType])):
-            self.sonarRanges[roboterType][i] = np.sqrt(sonarPoints[i].x**2 + sonarPoints[i].y**2)
+        self.sonar_ranges[roboterType] = np.zeros(len(self.sonar_angles))
+        for i in range(0, len(self.sonar_ranges[roboterType])):
+            self.sonar_ranges[roboterType][i] = np.sqrt(sonarPoints[i].x**2 + sonarPoints[i].y**2)
     
     def mouseSonarCallback(self, currentSonarScan):
         self.sonarCallback(currentSonarScan,RoboterType.MOUSE)
@@ -247,7 +247,7 @@ class Behaviour:
     
     def performCollisionAvoidances(self, toGo):
         collAvoidance = self.calculate_collision_avoidance()
-        distanceToTarget = self.positionSelf.distanceTo(self.positionTarget)
+        distanceToTarget = self.positions[self.roboterType].distanceTo(self.positions[1-self.roboterType])
         output = Velocity(0,0)
         output.linear = toGo.linear
 
@@ -269,10 +269,11 @@ class Behaviour:
                 self.sonar_ranges[i] = 1e-12
 
         threshold = 0.6
-        if np.min([self.sonar_ranges[0], self.sonar_ranges[1], self.sonar_ranges[2], self.sonar_ranges[3], self.sonar_ranges[4], self.sonar_ranges[5], self.sonar_ranges[6], self.sonar_ranges[7]]) < threshold:
+        sonar_ranges = self.sonar_ranges[self.roboterType]
+        if np.min([sonar_ranges[0], sonar_ranges[1], sonar_ranges[2], sonar_ranges[3], sonar_ranges[4], sonar_ranges[5], sonar_ranges[6], sonar_ranges[7]]) < threshold:
             
             #threshold on force = distance
-            distancesWithThreshold = (1/self.sonar_ranges * -1) - threshold
+            distancesWithThreshold = (1/sonar_ranges * -1) - threshold
 
             weight = np.array([0.2, 0.3, 0.4, 0.8, 0.8, 0.4, 0.3, 0.2])
 
