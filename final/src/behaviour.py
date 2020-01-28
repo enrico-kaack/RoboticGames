@@ -47,12 +47,15 @@ class Behaviour:
         self.maxLinVel = [0.35,0.4]
         self.maxAngVel = [1.0,0.8]
         
+        
         #properties for both robots
         self.positions = [Position(0.0,0.0),Position(0.0,0.0)]
         self.velocities = [Velocity(0.0, 0.0),Velocity(0.0, 0.0)]
         self.orientations = [0.0,0.0]
         self.last_angle = 0.0
         self.sonar_ranges = np.array([np.zeros(len(self.sonar_angles)),np.zeros(len(self.sonar_angles))])
+
+        self.currentVelocities = [Velocity(0.0, 0.0),Velocity(0.0, 0.0)]
         
         #properties for this robot
         self.roboterType = roboterType
@@ -69,16 +72,19 @@ class Behaviour:
         if self.roboterType == RoboterType.CAT:
             #ros publisher to give control commands
             self.pub = rospy.Publisher("/cat/p3dx_velocity_controller/cmd_vel", Twist, queue_size=10)
+
         else:
             #ros publisher to give control commands
             self.pub = rospy.Publisher("/mouse/p3dx_velocity_controller/cmd_vel", Twist, queue_size=10)
+
         #init main loop
-        self.loop(self)
+        self.loop()
 
     def loop(self):
         while not rospy.is_shutdown():                          
             bestCombination = self.calcBestCombination(self.positions, self.orientations, self.steps)
             toGo = self.choices[bestCombination[self.roboterType]]
+            collAvoidanceOutput = self.performCollisionAvoidances(toGo)
             output = Twist()
             output.linear.x = np.interp(toGo.linear, [-1,1], [-self.maxLinVel, self.maxLinVel])
             output.angular.z = np.interp(toGo.angular, [-1,1], [-self.maxAngVel, self.maxAngVel])
@@ -97,7 +103,7 @@ class Behaviour:
                     nextCost = self.costFunction([simulatedPositions[0][y],simulatedPositions[1][x]], [simulatedOrientations[0][y],simulatedOrientations[1][x]])
                     costLine.append(nextCost)
                 costs.append(costLine)
-            return self.nash(self,costs)
+            return self.nash(costs)
         else: 
             simulatedPositions, simulatedOrientations = self.simulateStep(positions,orientations)
             costs = []
@@ -107,7 +113,7 @@ class Behaviour:
                     irrelevantDecision, nextCost = self.calcBestCombination([simulatedPositions[0][y],simulatedPositions[1][x]], [simulatedOrientations[0][y],simulatedOrientations[1][x]], stepCount-1)
                     costLine.append(nextCost)
                 costs.append(costLine)
-            return self.nash(self,costs)
+            return self.nash(costs)
         
     """
     returns a single cost for one pair of positions and orientations of both players
@@ -138,13 +144,13 @@ class Behaviour:
         #calcualte the new positions
         #deltaX = arcsin w (w = angle) * d (distance in m, assume the distance is smaller when turning)
         #deltaY = arccos w (w = angle) * d
-
         if roboterType == RoboterType.CAT:
-            w = np.pi * 0.5 + np.array([-1.0, -0.6, 0.0, 0.6, 1.0]) + np.repeat(-1*orientation, 5) #world orientation with own variation
-            h = np.array([0.7, 0.9, 1.0, 0.9, 0.7])
+            w = np.pi * 0.5 + np.array([self.choices[0].angular, self.choices[1].angular, self.choices[2].angular, self.choices[3].angular, self.choices[4].angular]) * self.maxAngVel[1] + np.repeat(-1*orientation, 5) #world orientation with own variation
+            h = np.array([self.choices[0].linear, self.choices[1].linear, self.choices[2].linear, self.choices[3].linear, self.choices[4].linear]) * self.maxLinVel[1]
         else:
-            w = np.pi * 0.5 + np.array([-1.0, -0.6, 0.0, 0.6, 1.0]) + np.repeat(-1*orientation, 5) #world orientation with own variation
-            h = np.array([0.7, 0.9, 1.0, 0.9, 0.7])
+            w = np.pi * 0.5 + np.array([self.choices[0].angular, self.choices[1].angular, self.choices[2].angular, self.choices[3].angular, self.choices[4].angular]) * self.maxAngVel[0] + np.repeat(-1*orientation, 5) #world orientation with own variation
+            h = np.array([self.choices[0].linear, self.choices[1].linear, self.choices[2].linear, self.choices[3].linear, self.choices[4].linear]) * self.maxLinVel[0]
+
 
         deltaX = np.sin(w) * h
         deltaY = np.cos(w) * h
@@ -176,10 +182,10 @@ class Behaviour:
         self.positions[roboterType] = Position(pos.pose.pose.position.x, pos.pose.pose.position.y)
         
     def mousePositionAndOrientationCallback(self,pos):
-        self.positionAndOrientationCallback(self,pos,RoboterType.MOUSE)
+        self.positionAndOrientationCallback(pos,RoboterType.MOUSE)
         
     def catPositionAndOrientationCallback(self,pos):
-        self.positionAndOrientationCallback(self,pos,RoboterType.CAT)
+        self.positionAndOrientationCallback(pos,RoboterType.CAT)
 
     def sonarCallback(self, currentSonarScan, roboterType):
         # Die Sonarsensoren des Roboters werden im folgenden Array gespeichert
@@ -191,11 +197,16 @@ class Behaviour:
             self.sonarRanges[roboterType][i] = np.sqrt(sonarPoints[i].x**2 + sonarPoints[i].y**2)
     
     def mouseSonarCallback(self, currentSonarScan):
-        self.sonarCallback(self,currentSonarScan,RoboterType.MOUSE)
+        self.sonarCallback(currentSonarScan,RoboterType.MOUSE)
         
     def catSonarCallback(self, currentSonarScan):
-        self.sonarCallback(self,currentSonarScan,RoboterType.CAT)
-        
+        self.sonarCallback(currentSonarScan,RoboterType.CAT)
+
+    def catVelocityCallback(self, current_odometry):
+        self.currentVelocities[1] = Velocity(current_odometry.twist.twist.linear.x, current_odometry.twist.twist.angular.z)
+
+    def mouseVelocityCallback(self, current_odometry):
+        self.currentVelocities[0] = Velocity(current_odometry.twist.twist.linear.x, current_odometry.twist.twist.angular.z)
     """
     costs for player 0 are wins for player 1; returns the ids the palyer take as an array and the cost for player 0 for that decision
     """
