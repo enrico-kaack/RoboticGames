@@ -263,8 +263,8 @@ class Behaviour:
         return distances
     
     def calculate_collision_avoidance(self):
-        for i, self.sonar_range in enumerate(self.sonar_ranges):
-            if self.sonar_range == 0.0:
+        for i, sonar_range in enumerate(self.sonar_ranges):
+            if sonar_range == 0.0:
                 rospy.logerr('Catched Zero')
                 self.sonar_ranges[i] = 1e-12
 
