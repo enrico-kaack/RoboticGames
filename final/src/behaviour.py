@@ -2,6 +2,7 @@
 
 import numpy as np
 import rospy
+import math
 from sensor_msgs.msg import PointCloud
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Pose
@@ -50,12 +51,11 @@ class Behaviour:
         
         #properties for both robots
         self.positions = [Position(0.0,0.0),Position(0.0,0.0)]
-        self.velocities = [Velocity(0.0, 0.0),Velocity(0.0, 0.0)]
+        self.currentVelocities = [Velocity(0.0, 0.0),Velocity(0.0, 0.0)]
         self.orientations = [0.0,0.0]
         self.last_angle = 0.0
         self.sonar_ranges = np.array([np.zeros(len(self.sonar_angles)),np.zeros(len(self.sonar_angles))])
 
-        self.currentVelocities = [Velocity(0.0, 0.0),Velocity(0.0, 0.0)]
         
         #properties for this robot
         self.roboterType = roboterType
@@ -86,12 +86,12 @@ class Behaviour:
             toGo = self.choices[bestCombination[self.roboterType]]
             collAvoidanceOutput = self.performCollisionAvoidances(toGo)
             output = Twist()
-            output.linear.x = np.interp(toGo.linear, [-1,1], [-self.maxLinVel, self.maxLinVel])
-            output.angular.z = np.interp(toGo.angular, [-1,1], [-self.maxAngVel, self.maxAngVel])
+            output.linear.x = np.interp(collAvoidanceOutput.linear, [-1,1], [-self.maxLinVel[self.roboterType], self.maxLinVel[self.roboterType]])
+            output.angular.z = np.interp(collAvoidanceOutput.angular, [-1,1], [-self.maxAngVel[self.roboterType], self.maxAngVel[self.roboterType]])
             self.pub.publish(output)
             
     """
-    positions = [mousePosition,catPosition], orientations = [mouseOrientation, catOrientation], stepCount = recursive depth of calculation -> 1 atm
+    positions = [mousePosition,catPosition], orientations = [mouseOrientation, catOrientation], stepCount = recursive depth of calculation
     """
     def calcBestCombination(self, positions, orientations, stepCount):
         if (stepCount == 1):
@@ -116,19 +116,23 @@ class Behaviour:
             return self.nash(costs)
         
     """
-    returns a single cost for one pair of positions and orientations of both players
+    returns a single cost for one pair of positions and orientations of both players; the higher the cost the worse for the cat; cost = 0 => cat caught the mouse
     """
     def costFunction(self, positions, orientations):
-        #the higher the value the worse for the cat
+        #values are calculated for an arena with width and height = 100
         #start with cost for distance
-        costDistance = pow(positions[0].x-positions[1].x,2)+pow(positions[0].y-positions[1].y,2)
+        costDistance = math.sqrt(pow(positions[0].x-positions[1].x,2)+pow(positions[0].y-positions[1].y,2))/1.42#value between ~1 and ~100
         #add cost for orientation
-        costOrientationMouse = 0
-        costOrientationCat = 0
+        orientationFromCatToMouse = math.atan2(positions[0].x-positions[1].x, positions[0].y-positions[1].y)
+        costOrientationMouse = (abs(orientations[0]-orientationFromCatToMouse)/math.pi+(0.5-(abs(orientations[0]-orientationFromCatToMouse)/math.pi))*2-0.5)/1.5*99+1#value between 1 and 100: 1 at -90 and 90 degrees; 34 at 0 degrees; 100 at 180 degrees
+        costOrientationCat = (abs(orientations[1]-orientationFromCatToMouse)/math.pi+abs(orientations[1]-orientations[0])/math.pi*2)*33+1#value between 1 and 100: higher when not looking at mouse; higher when not looking in the same direction as mouse
         #add cost for space
-        costFreespaceCat = 0
-        costWallspaceMouse = 0
-        return costDistance+costOrientationMouse+costOrientationCat+costFreespaceCat+costWallspaceMouse
+        #costFreespaceCat = 0
+        #costWallspaceMouse = 0
+        if costDistance < 2 :#expect to hit mouse with cat -> ignore orientation
+            costOrientationMouse = 0
+            costOrientationCat = 0
+        return int(costDistance-costOrientationMouse/math.sqrt(costDistance)+costOrientationCat/math.sqrt(costDistance))
 
 
     def simulateStep(self, positions,orientations):
