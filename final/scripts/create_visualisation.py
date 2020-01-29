@@ -21,15 +21,22 @@ for topic, msgs, t in bag_cat.read_messages(topics=['/cat/base_pose_ground_truth
 	cat_time.append(t)
 point_list_cat=list(point_list_cat)
 cat_time=list(cat_time)
-
+point_list_mouse = list(point_list_mouse)
+mouse_time = list(mouse_time)
 
 point_list_cat.pop(0)
 while len(point_list_cat) > len(point_list_mouse):
 	point_list_cat.pop(0)
 	cat_time.pop(0)
 
+while len(point_list_mouse) > len(point_list_cat):
+	point_list_mouse.pop(0)
+	mouse_time.pop(0)
+
 point_list_cat=np.array(point_list_cat)
 cat_time=np.array(cat_time)
+point_list_mouse = np.array(point_list_mouse)
+mouse_time = np.array(mouse_time)
 
 plt.scatter(point_list_mouse[1:,1],point_list_mouse[1:,0],label="mouse")
 plt.scatter(point_list_cat[1:,1],point_list_cat[1:,0],label="cat")
