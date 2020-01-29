@@ -41,7 +41,7 @@ class Behaviour:
         #constants equal for both robots
         self.sonar_angles = np.array([-90.0, -50.0, -30.0, -10.0, 10.0, 30.0, 50.0, 90.0])
         self.sonar_angles = self.sonar_angles / 360.0 * 2 * np.pi
-        self.steps = 3
+        self.steps = 2
         self.choices = [Velocity(1, -2), Velocity(1, -1), Velocity(1, 0.0), Velocity(1, 1), Velocity(1, 2.0)]
         
         #constants different for both robots
@@ -86,8 +86,8 @@ class Behaviour:
             toGo = self.choices[bestCombination[0][self.roboterType]]
             collAvoidanceOutput = self.performCollisionAvoidances(toGo)
             output = Twist()
-            output.linear.x = np.interp(toGo.linear, [-1,1], [-self.maxLinVel[self.roboterType], self.maxLinVel[self.roboterType]])
-            output.angular.z = np.interp(toGo.angular, [-1,1], [-self.maxAngVel[self.roboterType], self.maxAngVel[self.roboterType]])
+            output.linear.x = np.interp(collAvoidanceOutput.linear, [-1,1], [-self.maxLinVel[self.roboterType], self.maxLinVel[self.roboterType]])
+            output.angular.z = np.interp(collAvoidanceOutput.angular, [-1,1], [-self.maxAngVel[self.roboterType], self.maxAngVel[self.roboterType]])
             print(toGo)
             self.pub.publish(output)
             
@@ -117,7 +117,7 @@ class Behaviour:
             return self.nash(costs)
         
     """
-    returns a single cost for one pair of positions and orientations of both players; the higher the cost the worse for the cat; cost = 0 => cat caught the mouse
+    returns a single cost for one pair of positions and orientations of both players; the higher the cost the worse for the cat
     """
     def costFunction(self, positions, orientations):
         #values are calculated for an arena with width and height = 5
@@ -125,15 +125,12 @@ class Behaviour:
         costDistance = math.sqrt(pow(positions[0].x-positions[1].x,2)+pow(positions[0].y-positions[1].y,2))/7*100#value between ~1 and ~100
         #add cost for orientation
         orientationFromCatToMouse = math.atan2(positions[0].x-positions[1].x, positions[0].y-positions[1].y)
-        costOrientationMouse = (abs(orientations[0]-orientationFromCatToMouse)/math.pi+(0.5-(abs(orientations[0]-orientationFromCatToMouse)/math.pi))*2-0.5)/1.5*39+1#value between 1 and 40: 1 at -90 and 90 degrees; 13 at 0 degrees; 40 at 180 degrees
+        costOrientationMouse = (abs(0.5-(abs((orientations[0]-orientationFromCatToMouse+math.pi)%math.pi)/math.pi))*150+abs(0.5-(abs((orientations[0]-orientations[1]+math.pi)%math.pi)/math.pi))*100/pow(costDistance,3))*(1-self.roboterType)#value between 1 and 40: 1 at -90 and 90 degrees; 13 at 0 degrees; 40 at 180 degrees
         costOrientationCat = (abs(orientations[1]-orientationFromCatToMouse)/math.pi+abs(orientations[1]-orientations[0])/math.pi*2)*13+1#value between 1 and 40: higher when not looking at mouse; higher when not looking in the same direction as mouse
         #add cost for space
         #costFreespaceCat = 0
         #costWallspaceMouse = 0
-        if costDistance < 2: #expect to hit mouse with cat -> ignore orientation
-            costOrientationMouse = 0
-            costOrientationCat = 0
-        return costDistance-costOrientationMouse/costDistance+costOrientationCat/costDistance
+        return costDistance-costOrientationMouse+costOrientationCat/costDistance
 
 
     def simulateStep(self, positions,orientations):
@@ -269,7 +266,7 @@ class Behaviour:
                 rospy.logerr('Catched Zero')
                 self.sonar_ranges[self.roboterType][i] = 1e-12
 
-        threshold = 0.6
+        threshold = 0.4
         sonar_ranges = self.sonar_ranges[self.roboterType]
         if np.min([sonar_ranges[0], sonar_ranges[1], sonar_ranges[2], sonar_ranges[3], sonar_ranges[4], sonar_ranges[5], sonar_ranges[6], sonar_ranges[7]]) < threshold:
             
@@ -302,7 +299,7 @@ class Behaviour:
 
         velocity_adjustment = Velocity(0.0, 0.0)
         velocity_adjustment.linear  = 1-linearForce
-        velocity_adjustment.angular = rotationAngle
+        velocity_adjustment.angular = rotationAngle*2
 
         return velocity_adjustment
 import sys
