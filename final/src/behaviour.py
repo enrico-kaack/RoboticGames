@@ -41,8 +41,8 @@ class Behaviour:
         #constants equal for both robots
         self.sonar_angles = np.array([-90.0, -50.0, -30.0, -10.0, 10.0, 30.0, 50.0, 90.0])
         self.sonar_angles = self.sonar_angles / 360.0 * 2 * np.pi
-        self.steps = 2
-        self.choices = [Velocity(1, -2), Velocity(1, -1), Velocity(1, 0.0), Velocity(1, 1), Velocity(1, 2.0)]
+        self.steps = 6
+        self.choices = [Velocity(1, -2), Velocity(1, 0.0), Velocity(1, 2.0)]
         
         #constants different for both robots
         self.maxLinVel = [0.35,0.4]
@@ -120,18 +120,18 @@ class Behaviour:
     returns a single cost for one pair of positions and orientations of both players; the higher the cost the worse for the cat
     """
     def costFunction(self, positions, orientations):
-        #values are calculated for an arena with width and height = 5
-        #start with cost for distance
-        costDistance = math.sqrt(pow(positions[0].x-positions[1].x,2)+pow(positions[0].y-positions[1].y,2))/7*100#value between ~1 and ~100
-        #add cost for orientation
-        orientationFromCatToMouse = math.atan2(positions[0].x-positions[1].x, positions[0].y-positions[1].y)
-        costOrientationMouse = (abs(0.5-(abs((orientations[0]-orientationFromCatToMouse+math.pi)%math.pi)/math.pi))*150+abs(0.5-(abs((orientations[0]-orientations[1]+math.pi)%math.pi)/math.pi))*100/pow(costDistance,3))*(1-self.roboterType)#value between 1 and 40: 1 at -90 and 90 degrees; 13 at 0 degrees; 40 at 180 degrees
-        costOrientationCat = (abs(orientations[1]-orientationFromCatToMouse)/math.pi+abs(orientations[1]-orientations[0])/math.pi*2)*13+1#value between 1 and 40: higher when not looking at mouse; higher when not looking in the same direction as mouse
-        #add cost for space
-        #costFreespaceCat = 0
-        #costWallspaceMouse = 0
-        return costDistance-costOrientationMouse+costOrientationCat/costDistance
-
+        constMaxAngVelToDegreesInPi = math.pi/2
+        constMaxLinVelToCoordinatesPerSecond = 0.2
+        
+        catPos = positions[RoboterType.CAT]
+        mousePos = positions[RoboterType.Mouse]
+        catOrientation = orientations[RoboterType.CAT]
+        targetOrientation = math.arctan2(mousePos[0]-catPos[0],mousePos[1]-catPos[1])
+        turnTime = (targetOrientation-catOrientation)/(self.maxAngVel[RoboterType.CAT]/constMaxAngVelToDegreesInPi)
+        distance = math.sqrt(pow(mousePos[0]-catPos[0],2),pow(mousePos[1]-catPos[1],2))
+        distanceTime = distance/(self.maxLinVel[RoboterType.CAT]*constMaxLinVelToCoordinatesPerSecond)
+        cost = turnTime+distanceTime
+        return cost
 
     def simulateStep(self, positions,orientations):
         simulatedPositions = [None, None]
@@ -141,24 +141,20 @@ class Behaviour:
         return simulatedPositions, simulatedOrientations
 
     def simulatePosition(self, roboterType, position, orientation):
-        #discretizing all possibiliies into 5 different directions: straight, half-left, left (respective for right) 
+        #discretizing all possibiliies into 3 different directions: left, straight, right
         
         #calcualte the new positions
         #deltaX = arcsin w (w = angle) * d (distance in m, assume the distance is smaller when turning)
         #deltaY = arccos w (w = angle) * d
-        if roboterType == RoboterType.CAT:
-            w = np.pi * 0.5 + np.array([self.choices[0].angular, self.choices[1].angular, self.choices[2].angular, self.choices[3].angular, self.choices[4].angular]) * self.maxAngVel[1] + np.repeat(-1*orientation, 5) #world orientation with own variation
-            h = np.array([self.choices[0].linear, self.choices[1].linear, self.choices[2].linear, self.choices[3].linear, self.choices[4].linear]) * self.maxLinVel[1]
-        else:
-            w = np.pi * 0.5 + np.array([self.choices[0].angular, self.choices[1].angular, self.choices[2].angular, self.choices[3].angular, self.choices[4].angular]) * self.maxAngVel[0] + np.repeat(-1*orientation, 5) #world orientation with own variation
-            h = np.array([self.choices[0].linear, self.choices[1].linear, self.choices[2].linear, self.choices[3].linear, self.choices[4].linear]) * self.maxLinVel[0]
+        w = np.pi * 0.5 + np.array([self.choices[0].angular, self.choices[1].angular, self.choices[2].angular]) * self.maxAngVel[self.roboterType] + np.repeat(-1*orientation, 3) #world orientation with own variation
+        h = np.array([self.choices[0].linear, self.choices[1].linear, self.choices[2].linear]) * self.maxLinVel[self.roboterType]
 
 
         deltaX = np.sin(w) * h
         deltaY = np.cos(w) * h
 
-        currentX = np.repeat(position.x, 5) #turn first scalar into array with n arguments
-        currentY = np.repeat(position.y, 5)
+        currentX = np.repeat(position.x, 3) #turn first scalar into array with n arguments
+        currentY = np.repeat(position.y, 3)
 
         newPosX = currentX + deltaX
         newPosY = currentY + deltaY
