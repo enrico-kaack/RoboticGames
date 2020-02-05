@@ -41,7 +41,7 @@ class Behaviour:
         #constants equal for both robots
         self.sonar_angles = np.array([-90.0, -50.0, -30.0, -10.0, 10.0, 30.0, 50.0, 90.0])
         self.sonar_angles = self.sonar_angles / 360.0 * 2 * np.pi
-        self.steps = 6
+        self.steps = 4
         self.choices = [Velocity(1, -2), Velocity(1, 0.0), Velocity(1, 2.0)]
         
         #constants different for both robots
@@ -124,11 +124,11 @@ class Behaviour:
         constMaxLinVelToCoordinatesPerSecond = 0.2
         
         catPos = positions[RoboterType.CAT]
-        mousePos = positions[RoboterType.Mouse]
+        mousePos = positions[RoboterType.MOUSE]
         catOrientation = orientations[RoboterType.CAT]
-        targetOrientation = math.arctan2(mousePos[0]-catPos[0],mousePos[1]-catPos[1])
+        targetOrientation = np.arctan2(mousePos.x-catPos.x,mousePos.y-catPos.y)
         turnTime = (targetOrientation-catOrientation)/(self.maxAngVel[RoboterType.CAT]/constMaxAngVelToDegreesInPi)
-        distance = math.sqrt(pow(mousePos[0]-catPos[0],2),pow(mousePos[1]-catPos[1],2))
+        distance = math.sqrt(pow(mousePos.x-catPos.x,2) + pow(mousePos.y-catPos.y,2))
         distanceTime = distance/(self.maxLinVel[RoboterType.CAT]*constMaxLinVelToCoordinatesPerSecond)
         cost = turnTime+distanceTime
         return cost
