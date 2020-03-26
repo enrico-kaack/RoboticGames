@@ -76,7 +76,7 @@ leg = ax.get_legend()
 leg.legendHandles[0].set_color('blue')
 leg.legendHandles[1].set_color('orange')
 
-plt.savefig("report_pfad" + base_path + ".png", dpi=1000)
+plt.savefig("report_pfad" + base_path + ".svg", dpi=600)
 plt.clf()
 
 
@@ -88,7 +88,7 @@ plt.title("Roboterabstand")
 plt.ylabel("Distanz")
 plt.xlabel("Zeit")
 plt.legend()
-plt.savefig("report_distance"+base_path + ".png", dpi=1000)
+plt.savefig("report_distance"+base_path + ".svg", dpi=600)
 plt.clf()
 
 
