@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:xhtml="http://www.w3.org/1999/xhtml"
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.1"
+   width="312px"
+   height="108px"
+   viewBox="-0.5 -0.5 312 108"
+   content="&lt;mxfile host=&quot;app.diagrams.net&quot; modified=&quot;2020-03-31T16:58:35.363Z&quot; agent=&quot;5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36&quot; etag=&quot;ZnsLmcjjuNskKclDz_Nk&quot; version=&quot;12.9.5&quot; type=&quot;device&quot;&gt;&lt;diagram id=&quot;bD9mJ0VrKZtxGhFeA2GZ&quot; name=&quot;Page-1&quot;&gt;5VjbbqMwEP0aHltxDzw2SXdXqip1lUrbPjowAasGI2OapF+/AxjCJVFI1W4r7UvkOYYxPufgGaJZi2T3U5AsvuchMM3Uw51mLTXT9D0Df0tgXwOOYddAJGhYQ8YBWNE3UKCu0IKGkPculJwzSbM+GPA0hUD2MCIE3/Yv23DWXzUjEYyAVUDYGP1DQxnXqGfODvgvoFHcrGy4fj2TkOZitZM8JiHfdiDrVrMWgnNZj5LdAljJXcNLfd+PE7PtgwlI5ZQb6OPvJyZXxVMq7+LnjMTL3L+y6iyvhBVqw4+FSDXTZZhzvhY4isrRI01AbUPuG24wP8qAwXwbUwmrjATlzBaNgFgsE4aRgUOSZ7U2G7oDfJy5WhWEhN3J7RgtSWgu4AlIscdL1A1Ww+t+EG87Miko7ijUYEQZI2ozH7jDgaLvAirtEZXfizBb/2aEGecJk4KSNGITGBNcEkl5iuGVryOwoYwtOOOiymRtvACCAPFcCv4CnZm159iO/kGmnA04dsYcu/+SY3PE8T0p8hHPIubJGvGzNA9YDR3wQvsYq565tlz3Y1g1hqweca59hFX7s1h1JrzqaXhTlh+MAkbynAZ9ImvCmpJitERBOKpHZ2nq0OAcoaHBBDB8RV776Y9xo1Z44BQXPpwfhtVXwRrQm/NCBKDu6haiUSJ/IKfbTySJiECOElVStdt+v3qz/1E9y5t9jHr4Zn+pet5F6qU8hXPSoUBi/4SBfm3bTgM8V4Cu2w2wLAnQ22jfjR5AYIMkQShwqhvwsSvaz5/gNavnOrkvOxvc/gndtu+Xussx+okMd5Dok93lj9y1pLkkKUpk6kebYCxrctC8MRqVfUiAWpeOmJfFj+InxY2aSGgYVj2NgJy+kXWVqrRNVm6r2qgz15wlIoysgc1J8BIJXqRhU2CVrU/WVvU1pFJr7TdI14Cn366ThfhKvzYGVaDp4t5roDaNca0PDhK+2eTwKSo3JuvIfEfk2xRx+42O0qHbFSlougmOdVyV2GXjX9ninSa4oG31Bg2WP63BMi9vsDA8fPLWeh7+N7Bu/wI=&lt;/diagram&gt;&lt;/mxfile&gt;"
+   style="background-color: rgb(255, 255, 255);"
+   id="svg58"
+   sodipodi:docname="schema.svg"
+   inkscape:version="0.92.4 5da689c313, 2019-01-14">
+  <metadata
+     id="metadata62">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="2022"
+     inkscape:window-height="1230"
+     id="namedview60"
+     showgrid="false"
+     inkscape:zoom="3.4539447"
+     inkscape:cx="222.56932"
+     inkscape:cy="102.98264"
+     inkscape:window-x="0"
+     inkscape:window-y="27"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="g48" />
+  <defs
+     id="defs2" />
+  <g
+     id="g48">
+    <ellipse
+       cx="190"
+       cy="46"
+       rx="40"
+       ry="40"
+       fill="#ffffff"
+       stroke="#000000"
+       pointer-events="all"
+       id="ellipse4" />
+    <g
+       transform="translate(-0.5 -0.5)"
+       id="g10">
+      <switch
+         id="switch8">
+        <foreignObject
+           style="overflow: visible; text-align: left;"
+           pointer-events="none"
+           width="100%"
+           height="100%"
+           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+          <xhtml:div
+             style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 78px; height: 1px; padding-top: 46px; margin-left: 151px;">
+            <xhtml:div
+               style="box-sizing: border-box; font-size: 0; text-align: center; ">
+              <xhtml:div
+                 style="display: inline-block; font-size: 12px; font-family: Helvetica; color: #000000; line-height: 1.2; pointer-events: all; white-space: normal; word-wrap: normal; ">Turn<xhtml:br />
+
+Time</xhtml:div>
+            </xhtml:div>
+          </xhtml:div>
+        </foreignObject>
+        <text
+           x="190"
+           y="50"
+           font-size="12px"
+           id="text6"
+           style="font-size:12px;font-family:Helvetica;text-anchor:middle;fill:#000000">Turn</text>
+        <text
+           x="190"
+           y="50"
+           fill="#000000"
+           font-family="Helvetica"
+           font-size="12px"
+           text-anchor="middle"
+           id="text3732">...</text>
+      </switch>
+    </g>
+    <ellipse
+       cx="270"
+       cy="46"
+       rx="40"
+       ry="40"
+       fill="#ffffff"
+       stroke="#000000"
+       pointer-events="all"
+       id="ellipse12" />
+    <path
+       d="M 200 36 L 260 76 L 200 116 Z"
+       stroke-miterlimit="10"
+       pointer-events="all"
+       id="path14"
+       stroke="#b85450"
+       fill="#f8cecc"
+       transform="rotate(-90,230,76)" />
+    <path
+       d="M 20 6 L 40 26 L 20 46 L 0 26 Z"
+       fill="#d5e8d4"
+       stroke="#82b366"
+       stroke-miterlimit="10"
+       pointer-events="all"
+       id="path16" />
+    <g
+       transform="translate(-0.5 -0.5)"
+       id="g22">
+      <switch
+         id="switch20">
+        <foreignObject
+           style="overflow: visible; text-align: left;"
+           pointer-events="none"
+           width="100%"
+           height="100%"
+           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+          <xhtml:div
+             style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 38px; height: 1px; padding-top: 26px; margin-left: 1px;">
+            <xhtml:div
+               style="box-sizing: border-box; font-size: 0; text-align: center; ">
+              <xhtml:div
+                 style="display: inline-block; font-size: 12px; font-family: Helvetica; color: #000000; line-height: 1.2; pointer-events: all; white-space: normal; word-wrap: normal; ">Maus</xhtml:div>
+            </xhtml:div>
+          </xhtml:div>
+        </foreignObject>
+        <text
+           x="20"
+           y="30"
+           fill="#000000"
+           font-family="Helvetica"
+           font-size="12px"
+           text-anchor="middle"
+           id="text18">Maus</text>
+      </switch>
+    </g>
+    <path
+       d="M 243 16 L 243.7 15.53"
+       fill="none"
+       stroke="#000000"
+       stroke-miterlimit="10"
+       pointer-events="stroke"
+       id="path24" />
+    <path
+       d="M 248.07 12.62 L 244.19 19.42 L 243.7 15.53 L 240.3 13.59 Z"
+       fill="#000000"
+       stroke="#000000"
+       stroke-miterlimit="10"
+       pointer-events="all"
+       id="path26" />
+    <path
+       d="M 217 16 L 216.97 15.98"
+       fill="none"
+       stroke="#000000"
+       stroke-miterlimit="10"
+       pointer-events="stroke"
+       id="path28" />
+    <path
+       d="M 212.87 12.7 L 220.53 14.34 L 216.97 15.98 L 216.15 19.8 Z"
+       fill="#000000"
+       stroke="#000000"
+       stroke-miterlimit="10"
+       pointer-events="all"
+       id="path30" />
+    <path
+       d="M 37.88 23.88 L 185.6 6.32"
+       fill="none"
+       stroke="#000000"
+       stroke-miterlimit="10"
+       pointer-events="stroke"
+       id="path32" />
+    <g
+       transform="translate(-0.5 -0.5)"
+       id="g38">
+      <switch
+         id="switch36">
+        <foreignObject
+           style="overflow: visible; text-align: left;"
+           pointer-events="none"
+           width="100%"
+           height="100%"
+           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+          <xhtml:div
+             style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 1px; height: 1px; padding-top: 6px; margin-left: 104px;">
+            <xhtml:div
+               style="box-sizing: border-box; font-size: 0; text-align: center; ">
+              <xhtml:div
+                 style="display: inline-block; font-size: 12px; font-family: Helvetica; color: #000000; line-height: 1.2; pointer-events: all; white-space: nowrap; ">Distance Time</xhtml:div>
+            </xhtml:div>
+          </xhtml:div>
+        </foreignObject>
+        <text
+           x="104"
+           y="10"
+           fill="#000000"
+           font-family="Helvetica"
+           font-size="12px"
+           text-anchor="middle"
+           id="text34">Distance Time</text>
+      </switch>
+    </g>
+    <rect
+       x="210"
+       y="76"
+       width="40"
+       height="20"
+       fill="none"
+       stroke="none"
+       pointer-events="all"
+       id="rect40" />
+    <g
+       transform="translate(-0.5 -0.5)"
+       id="g46">
+      <switch
+         id="switch44">
+        <foreignObject
+           style="overflow: visible; text-align: left;"
+           pointer-events="none"
+           width="100%"
+           height="100%"
+           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+          <xhtml:div
+             style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 38px; height: 1px; padding-top: 86px; margin-left: 211px;">
+            <xhtml:div
+               style="box-sizing: border-box; font-size: 0; text-align: center; ">
+              <xhtml:div
+                 style="display: inline-block; font-size: 12px; font-family: Helvetica; color: #000000; line-height: 1.2; pointer-events: all; white-space: normal; word-wrap: normal; ">Katze</xhtml:div>
+            </xhtml:div>
+          </xhtml:div>
+        </foreignObject>
+        <text
+           x="230"
+           y="90"
+           fill="#000000"
+           font-family="Helvetica"
+           font-size="12px"
+           text-anchor="middle"
+           id="text42">Katze</text>
+      </switch>
+    </g>
+    <text
+       x="190.00528"
+       y="61.069294"
+       font-size="12px"
+       id="text6-3"
+       style="font-size:12px;font-family:Helvetica;text-anchor:middle;fill:#000000">Time</text>
+  </g>
+</svg>
