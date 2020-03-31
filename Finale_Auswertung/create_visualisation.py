@@ -61,7 +61,9 @@ colorsMouse = map(lambda mod: adjust_lightness('blue', mod), colorModifier)
 colorsCat = map(lambda mod: adjust_lightness('orange', mod), colorModifier)
 
 
-
+if base_path =="12" or base_path == "13":
+	background=plt.imread("rgarena3-4.png")
+	plt.imshow(background,extent=[-3.14+spawn_point[1,0],3.14+spawn_point[1,0],-3.14+spawn_point[1,1],3.14+spawn_point[1,1]])
 
 plt.scatter(point_list_mouse[1:,1],point_list_mouse[1:,0],label="mouse", color=colorsMouse)
 plt.scatter(point_list_cat[1:,1],point_list_cat[1:,0],label="cat", color=colorsCat)
@@ -76,7 +78,9 @@ leg = ax.get_legend()
 leg.legendHandles[0].set_color('blue')
 leg.legendHandles[1].set_color('orange')
 
+plt.savefig("report_pfad" + base_path + ".png", dpi=600)
 plt.savefig("report_pfad" + base_path + ".svg", dpi=600)
+
 plt.clf()
 
 
@@ -89,6 +93,8 @@ plt.ylabel("Distanz")
 plt.xlabel("Zeit")
 plt.legend()
 plt.savefig("report_distance"+base_path + ".svg", dpi=600)
+plt.savefig("report_distance"+base_path + ".png", dpi=600)
+
 plt.clf()
 
 
