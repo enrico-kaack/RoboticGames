@@ -104,7 +104,7 @@ class Behaviour:
                     nextCost = self.costFunction([simulatedPositions[0][y],simulatedPositions[1][x]], [simulatedOrientations[0][y],simulatedOrientations[1][x]])
                     costLine.append(nextCost)
                 costs.append(costLine)
-            return self.nash(costs)
+            return self.maximin(costs)
         else: 
             simulatedPositions, simulatedOrientations = self.simulateStep(positions,orientations)
             costs = []
@@ -114,7 +114,7 @@ class Behaviour:
                     irrelevantDecision, nextCost = self.calcBestCombination([simulatedPositions[0][y],simulatedPositions[1][x]], [simulatedOrientations[0][y],simulatedOrientations[1][x]], stepCount-1)
                     costLine.append(nextCost)
                 costs.append(costLine)
-            return self.nash(costs)
+            return self.maximin(costs)
         
     """
     returns a single cost for one pair of positions and orientations of both players; the higher the cost the worse for the cat
@@ -144,14 +144,15 @@ class Behaviour:
         #discretizing all possibiliies into 3 different directions: left, straight, right
         
         #calcualte the new positions
-        #deltaX = arcsin w (w = angle) * d (distance in m, assume the distance is smaller when turning)
-        #deltaY = arccos w (w = angle) * d
-        w = np.pi * 0.5 + np.array([self.choices[0].angular, self.choices[1].angular, self.choices[2].angular]) * self.maxAngVel[self.roboterType] + np.repeat(-1*orientation, 3) #world orientation with own variation
+        t = np.array ([self.choices [0]. angular , self.choices [1]. angular , self.choices [2]. angular ]) * self.maxAngVel[self.roboterType] 
+        w = t - np.repeat (orientation , 3)
+        midOrientation = t - np.repeat (0.5 * orientation , 3)
+        #world orientation with own variation
         h = np.array([self.choices[0].linear, self.choices[1].linear, self.choices[2].linear]) * self.maxLinVel[self.roboterType]
 
 
-        deltaX = np.sin(w) * h
-        deltaY = np.cos(w) * h
+        deltaX = np.sin(midOrientation) * h
+        deltaY = np.cos(midOrientation) * h
 
         currentX = np.repeat(position.x, 3) #turn first scalar into array with n arguments
         currentY = np.repeat(position.y, 3)
@@ -163,7 +164,7 @@ class Behaviour:
             newPos.append(Position(posX, newPosY[index]))
 
         #estimate new orientation
-        newOrientation = w #could be improved
+        newOrientation = w 
         return np.array([newPos, newOrientation])
         
     def velocityCallback(self, current_odometry, roboterType):
@@ -208,8 +209,8 @@ class Behaviour:
     """
     costs for player 0 are wins for player 1; returns the ids the palyer take as an array and the cost for player 0 for that decision
     """
-    def nash(self,costs):
-        #mouseNashID:
+    def maximin(self,costs):
+        #mouseMaxiMinID:
         mins = []
         for y in range(len(costs)):
             minimum = costs[y][0]
@@ -217,13 +218,13 @@ class Behaviour:
                 if costs[y][x] < minimum:
                     minimum = costs[y][x]
             mins.append(minimum)
-        mouseNashID = 0
-        mouseMaxMin = mins[0]
+        mouseMaxiMinID = 0
+        mouseMaxiMin = mins[0]
         for i in range(len(mins)):
-            if mins[i] > mouseMaxMin:
-                mouseMaxMin = mins[i]
-                mouseNashID = i
-        #catNashID:
+            if mins[i] > mouseMaxiMin:
+                mouseMaxiMin = mins[i]
+                mouseMaxiMinID = i
+        #catMiniMaxID:
         maxes = []
         for x in range(len(costs)):
             maximum = costs[0][x]
@@ -231,13 +232,13 @@ class Behaviour:
                 if costs[y][x] > maximum:
                     maximum = costs[y][x]
             maxes.append(maximum)
-        catNashID = 0
-        catMinMax = maxes[0]
+        catMiniMaxID = 0
+        catMiniMax = maxes[0]
         for i in range(len(maxes)):
-            if maxes[i] < catMinMax:
-                catMinMax = maxes[i]
-                catNashID = i
-        return [mouseNashID,catNashID],costs[catNashID][mouseNashID]
+            if maxes[i] < catMiniMax:
+                catMiniMax = maxes[i]
+                catMiniMaxID = i
+        return [mouseMaxiMinID,catMiniMaxID],costs[catMiniMaxID][mouseMaxiMinID]
     
     def performCollisionAvoidances(self, toGo):
         collAvoidance = self.calculate_collision_avoidance()
