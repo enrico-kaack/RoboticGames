@@ -60,10 +60,11 @@ colorModifier = np.linspace(0.3,1.7,len(point_list_mouse))
 colorsMouse = map(lambda mod: adjust_lightness('blue', mod), colorModifier)
 colorsCat = map(lambda mod: adjust_lightness('orange', mod), colorModifier)
 
-
+"""
 if base_path =="12" or base_path == "13":
 	background=plt.imread("rgarena3-4.png")
 	plt.imshow(background,extent=[-3.14+spawn_point[1,0],3.14+spawn_point[1,0],-3.14+spawn_point[1,1],3.14+spawn_point[1,1]])
+"""
 
 plt.scatter(point_list_mouse[1:,1],point_list_mouse[1:,0],label="mouse", color=colorsMouse)
 plt.scatter(point_list_cat[1:,1],point_list_cat[1:,0],label="cat", color=colorsCat)
